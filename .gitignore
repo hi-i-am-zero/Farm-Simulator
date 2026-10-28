@@ -1,0 +1,42 @@
+# =============== UNITY GENERATED ===============
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]serSettings/
+/[Mm]emoryCaptures/
+
+# =============== IDE & GENDARTED FILES ===============
+# Bỏ qua các file cấu hình của Visual Studio / Rider để không conflict giữa các máy Dev
+.vs/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# =============== CRASH REPORTS ===============
+sysinfo.txt
+
+# =============== BUILDS & PACKAGES ===============
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# =============== ADDRESSABLES & CUSTOM ===============
+# Thư mục build mặc định của Addressables (tránh push asset bundle lên git script)
+/[Ss]erverData/
