@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 3093106493012312258}
   - component: {fileID: 3509724059250476626}
   - component: {fileID: 1025341451099233675}
-  - component: {fileID: 2176998248787604253}
   - component: {fileID: 2644875468181356961}
   m_Layer: 0
   m_Name: Cow
@@ -29,7 +28,7 @@ Transform:
   m_GameObject: {fileID: 3127301223322573154}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3, y: 1.5, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -84,12 +83,12 @@ SpriteRenderer:
   m_SortingLayer: 3
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 6091706668691328248, guid: f9f7c6c03e74a0d40bcfbcc62570a5b3, type: 3}
+  m_Sprite: {fileID: 911841031958816375, guid: 822114c99650e04438e32a31f42f76d5, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0.16, y: 0.16}
+  m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -133,41 +132,14 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 0.16, y: 0.16}
-    newSize: {x: 0.16, y: 0.16}
+    oldSize: {x: 1, y: 1}
+    newSize: {x: 1, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
   m_Size: {x: 0.8, y: 0.8}
   m_EdgeRadius: 0
---- !u!50 &2176998248787604253
-Rigidbody2D:
-  serializedVersion: 5
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3127301223322573154}
-  m_BodyType: 0
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_GravityScale: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_Interpolate: 0
-  m_SleepingMode: 1
-  m_CollisionDetection: 0
-  m_Constraints: 0
 --- !u!114 &2644875468181356961
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -180,10 +152,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ebe8c95f5aa658b499d92fd332ddf201, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AnimalWander
-  moveSpeed: 0.6
-  roamRadius: 3
+  animalType: 1
+  stepDistance: 1
+  stepDuration: 0.45
   minWaitTime: 2
-  maxWaitTime: 5
-  spriteRenderer: {fileID: 0}
-  bobSpeed: 8
-  bobAmount: 0.03
+  maxWaitTime: 4.5
+  maxStepFromHome: 4
+  spriteRenderer: {fileID: 3509724059250476626}
+  enableIdleBreathing: 1
+  enableWalkWaddle: 1
+  blockingLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295

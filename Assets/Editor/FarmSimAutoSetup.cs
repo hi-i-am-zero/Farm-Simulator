@@ -1,259 +1,223 @@
 #if UNITY_EDITOR
 using System.IO;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+[InitializeOnLoad]
+public static class FarmSimAutoRunner
+{
+    static FarmSimAutoRunner()
+    {
+        EditorApplication.delayCall += RunAutoSetup;
+    }
+
+    static void RunAutoSetup()
+    {
+        FarmSimAutoSetup.ExecuteSetup(silent: true);
+    }
+}
+
 public class FarmSimAutoSetup : EditorWindow
 {
-    [MenuItem("FarmSim/Tạo Player và Động vật (1-Click Setup)", false, 1)]
+    [MenuItem("FarmSim/Cập nhật Động vật (Gà, Bò, Cừu) - Bước 1 Ô & Thở", false, 1)]
     public static void ShowWindow()
     {
-        var window = GetWindow<FarmSimAutoSetup>("FarmSim Setup");
-        window.minSize = new Vector2(380, 220);
+        var window = GetWindow<FarmSimAutoSetup>("Cập nhật Động Vật");
+        window.minSize = new Vector2(400, 240);
         window.Show();
     }
 
     void OnGUI()
     {
-        GUILayout.Space(15);
-        GUILayout.Label("CÔNG CỤ TẠO PLAYER VÀ CÁC CON VẬT", EditorStyles.boldLabel);
-        GUILayout.Space(10);
+        GUILayout.Space(12);
+        GUILayout.Label("CẬP NHẬT GÀ, BÒ, CỪU: ĐI BƯỚC 1 Ô & KHÔNG NHẢY", EditorStyles.boldLabel);
+        GUILayout.Space(8);
         EditorGUILayout.HelpBox(
-            "Bấm nút bên dưới để tự động tạo:\n" +
-            "1. Prefab Player (kèm điều khiển, animation chạy/đứng)\n" +
-            "2. Prefab Gà (Chicken), Bò, Heo, Chó (kèm di chuyển tự nhiên)\n" +
-            "3. Dựng sẵn toàn bộ vào scene Dev_B và gắn CameraFollow\n" +
-            "4. Bấm Play là chơi thử được ngay!",
+            "Đặc điểm chuyển động mới:\n" +
+            "1. KHÔNG NHẢY: Con vật bước đi phẳng trên mặt đất, trượt êm 1 ô.\n" +
+            "2. Đi 1 ô phẳng (Lên/Xuống/Trái/Phải), tự lật hướng.\n" +
+            "3. Lắc nhẹ thân mình khi bước chân (waddle) và thở nhẹ khi đứng yên.\n" +
+            "4. Tự động spawn Bò và Cừu vào chuồng.",
             MessageType.Info);
 
-        GUILayout.Space(15);
-        GUI.backgroundColor = new Color(0.3f, 0.85f, 0.4f);
-        if (GUILayout.Button(" BẮT ĐẦU TẠO TOÀN BỘ NGAY ", GUILayout.Height(45)))
+        GUILayout.Space(12);
+        GUI.backgroundColor = new Color(0.2f, 0.8f, 0.4f);
+        if (GUILayout.Button(" CẬP NHẬT VÀ LƯU VÀO GAME NGAY ", GUILayout.Height(45)))
         {
-            ExecuteSetup();
+            ExecuteSetup(silent: false);
         }
     }
 
-    [MenuItem("FarmSim/Tự động chạy tạo ngay", false, 2)]
-    public static void ExecuteSetup()
+    [MenuItem("FarmSim/Chạy Cập nhật ngay", false, 2)]
+    public static void MenuExecute()
     {
-        // 1. Ensure directories exist
+        ExecuteSetup(silent: false);
+    }
+
+    public static void ExecuteSetup(bool silent = false)
+    {
         if (!Directory.Exists("Assets/Prefabs")) AssetDatabase.CreateFolder("Assets", "Prefabs");
         if (!Directory.Exists("Assets/Scenes")) AssetDatabase.CreateFolder("Assets", "Scenes");
 
-        // 2. Open or create Dev_B scene
-        string devBPath = "Assets/Scenes/Dev_B.unity";
-        Scene scene;
-        if (File.Exists(devBPath))
-        {
-            scene = EditorSceneManager.OpenScene(devBPath);
-        }
-        else
-        {
-            scene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
-            EditorSceneManager.SaveScene(scene, devBPath);
-        }
-
-        // 3. Load Player sprites
-        Sprite[] idleSprites = AssetDatabase.LoadAllAssetsAtPath("Assets/Art/Player/Player_Idle.png")
-            .OfType<Sprite>().OrderBy(s => s.name).ToArray();
-        Sprite[] runSprites = AssetDatabase.LoadAllAssetsAtPath("Assets/Art/Player/Player_Run.png")
-            .OfType<Sprite>().OrderBy(s => s.name).ToArray();
-
-        Sprite playerDefaultSprite = (idleSprites != null && idleSprites.Length > 0) ? idleSprites[0] : null;
-
-        // 4. Load Animal sprites from TinyFarm Tiles
-        Sprite chickenSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/TinyFarm/Tiles/tile_0121.png");
+        Sprite chickenSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/TinyFarm/Tiles/tile_0122.png");
+        Sprite cowSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/TinyFarm/Tiles/tile_0121.png");
+        Sprite sheepSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/TinyFarm/Tiles/tile_0120.png");
         Sprite eggSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/TinyFarm/Tiles/tile_0125.png");
-        Sprite cowSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/TinyFarm/Tiles/tile_0120.png");
-        Sprite dogSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/TinyFarm/Tiles/tile_0123.png");
-        Sprite pigSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Art/TinyFarm/Tiles/tile_0124.png");
 
-        // 5. Create or configure Player
-        GameObject player = GameObject.Find("Player");
-        if (player == null) player = new GameObject("Player");
-        player.tag = "Player";
-        player.transform.position = Vector3.zero;
+        // 1. Tạo/Cập nhật Prefab Bò (Cow) - bước 0.45s
+        GameObject cowPrefab = CreateOrUpdateAnimalPrefab("Cow", cowSprite, 0.45f, AnimalWander.AnimalType.Cow);
+        // 2. Tạo/Cập nhật Prefab Cừu (Sheep) - bước 0.40s
+        GameObject sheepPrefab = CreateOrUpdateAnimalPrefab("Sheep", sheepSprite, 0.40f, AnimalWander.AnimalType.Sheep);
+        // 3. Tạo/Cập nhật Prefab Gà (Chicken) - bước 0.35s
+        GameObject chickenPrefab = CreateOrUpdateChickenPrefab(chickenSprite, eggSprite);
 
-        // Rigidbody2D
-        var rb = player.GetComponent<Rigidbody2D>();
-        if (rb == null) rb = player.AddComponent<Rigidbody2D>();
-        rb.gravityScale = 0f;
-        rb.freezeRotation = true;
-        rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+        // 4. Thêm Bò và Cừu vào Scene đang mở nếu chưa có
+        AddAnimalsToCurrentScene(cowPrefab, sheepPrefab);
 
-        // Capsule Collider 2D
-        var col = player.GetComponent<CapsuleCollider2D>();
-        if (col == null) col = player.AddComponent<CapsuleCollider2D>();
-        col.size = new Vector2(0.5f, 0.5f);
-        col.offset = new Vector2(0, -0.2f);
-
-        // Child Sprite
-        Transform spriteChild = player.transform.Find("Sprite");
-        GameObject spriteObj;
-        if (spriteChild == null)
-        {
-            spriteObj = new GameObject("Sprite");
-            spriteObj.transform.SetParent(player.transform);
-            spriteObj.transform.localPosition = Vector3.zero;
-        }
-        else
-        {
-            spriteObj = spriteChild.gameObject;
-        }
-
-        var sr = spriteObj.GetComponent<SpriteRenderer>();
-        if (sr == null) sr = spriteObj.AddComponent<SpriteRenderer>();
-        if (playerDefaultSprite != null) sr.sprite = playerDefaultSprite;
-        sr.sortingLayerName = "Player";
-
-        // PlayerController
-        var ctrl = player.GetComponent<PlayerController>();
-        if (ctrl == null) ctrl = player.AddComponent<PlayerController>();
-
-        // PlayerVisual
-        var vis = player.GetComponent<PlayerVisual>();
-        if (vis == null) vis = player.AddComponent<PlayerVisual>();
-        var serializedVis = new SerializedObject(vis);
-        serializedVis.FindProperty("body").objectReferenceValue = rb;
-        serializedVis.FindProperty("sprite").objectReferenceValue = sr;
-        serializedVis.FindProperty("bobSpeed").floatValue = 14f;
-        serializedVis.FindProperty("bobAmount").floatValue = 0.05f;
-
-        // Assign sprite animations if available
-        if (idleSprites != null && idleSprites.Length > 0)
-        {
-            var idleProp = serializedVis.FindProperty("idleSprites");
-            idleProp.arraySize = idleSprites.Length;
-            for (int i = 0; i < idleSprites.Length; i++)
-                idleProp.GetArrayElementAtIndex(i).objectReferenceValue = idleSprites[i];
-        }
-        if (runSprites != null && runSprites.Length > 0)
-        {
-            var runProp = serializedVis.FindProperty("runSprites");
-            runProp.arraySize = runSprites.Length;
-            for (int i = 0; i < runSprites.Length; i++)
-                runProp.GetArrayElementAtIndex(i).objectReferenceValue = runSprites[i];
-        }
-        serializedVis.ApplyModifiedProperties();
-
-        // Save Player Prefab
-        PrefabUtility.SaveAsPrefabAsset(player, "Assets/Prefabs/Player.prefab");
-
-        // 6. Create Chicken (Gà)
-        GameObject chicken = GameObject.Find("Chicken");
-        if (chicken == null) chicken = new GameObject("Chicken");
-        chicken.transform.position = new Vector3(2.5f, 0.5f, 0);
-
-        var chickenSr = chicken.GetComponent<SpriteRenderer>();
-        if (chickenSr == null) chickenSr = chicken.AddComponent<SpriteRenderer>();
-        if (chickenSprite != null) chickenSr.sprite = chickenSprite;
-        chickenSr.sortingLayerName = "Crops";
-
-        var chickenCol = chicken.GetComponent<BoxCollider2D>();
-        if (chickenCol == null) chickenCol = chicken.AddComponent<BoxCollider2D>();
-        chickenCol.isTrigger = true;
-        chickenCol.size = new Vector2(0.8f, 0.8f);
-
-        // Child EggIcon
-        Transform eggChild = chicken.transform.Find("EggIcon");
-        GameObject eggObj;
-        if (eggChild == null)
-        {
-            eggObj = new GameObject("EggIcon");
-            eggObj.transform.SetParent(chicken.transform);
-            eggObj.transform.localPosition = new Vector3(0, 0.6f, 0);
-        }
-        else
-        {
-            eggObj = eggChild.gameObject;
-        }
-        var eggSr = eggObj.GetComponent<SpriteRenderer>();
-        if (eggSr == null) eggSr = eggObj.AddComponent<SpriteRenderer>();
-        if (eggSprite != null) eggSr.sprite = eggSprite;
-        eggSr.sortingLayerName = "Crops";
-        eggSr.sortingOrder = 5;
-
-        // Chicken component
-        var chickComp = chicken.GetComponent<Chicken>();
-        if (chickComp == null) chickComp = chicken.AddComponent<Chicken>();
-        var chickSo = new SerializedObject(chickComp);
-        chickSo.FindProperty("body").objectReferenceValue = chickenSr;
-        chickSo.FindProperty("eggIcon").objectReferenceValue = eggObj;
-        chickSo.ApplyModifiedProperties();
-
-        // Animal wander for chicken
-        var chickWander = chicken.GetComponent<AnimalWander>();
-        if (chickWander == null) chickWander = chicken.AddComponent<AnimalWander>();
-        var chickWanderSo = new SerializedObject(chickWander);
-        chickWanderSo.FindProperty("moveSpeed").floatValue = 0.8f;
-        chickWanderSo.FindProperty("roamRadius").floatValue = 2f;
-        chickWanderSo.FindProperty("bobSpeed").floatValue = 12f;
-        chickWanderSo.ApplyModifiedProperties();
-
-        // Save Chicken Prefab
-        PrefabUtility.SaveAsPrefabAsset(chicken, "Assets/Prefabs/Chicken.prefab");
-
-        // 7. Create Other Animals (Cow, Pig, Dog)
-        CreateAnimalPrefab("Cow", new Vector3(-3f, 1.5f, 0), cowSprite, 0.6f, 3f, 8f, 0.03f);
-        CreateAnimalPrefab("Pig", new Vector3(-2.5f, -1.8f, 0), pigSprite, 0.7f, 2.5f, 10f, 0.04f);
-        CreateAnimalPrefab("Dog", new Vector3(3f, -1.5f, 0), dogSprite, 1.2f, 4f, 12f, 0.05f);
-
-        // 8. Main Camera setup
-        Camera mainCam = Camera.main;
-        if (mainCam != null)
-        {
-            mainCam.orthographic = true;
-            mainCam.orthographicSize = 5.6f;
-            mainCam.transform.position = new Vector3(0, 0, -10);
-
-            var camFollow = mainCam.GetComponent<CameraFollow>();
-            if (camFollow == null) camFollow = mainCam.gameObject.AddComponent<CameraFollow>();
-            var camSo = new SerializedObject(camFollow);
-            camSo.FindProperty("target").objectReferenceValue = player.transform;
-            camSo.FindProperty("smooth").floatValue = 8f;
-            camSo.ApplyModifiedProperties();
-        }
-
-        // 9. Save Dev_B Scene
-        EditorSceneManager.MarkSceneDirty(scene);
-        EditorSceneManager.SaveScene(scene, devBPath);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Debug.Log("🎉 [FarmSim] TỰ ĐỘNG THÀNH CÔNG! Đã tạo Player.prefab, Chicken.prefab, Cow.prefab, Pig.prefab, Dog.prefab và setup toàn bộ trong Scenes/Dev_B.unity! Hãy bấm Play để chơi thử!");
-        EditorUtility.DisplayDialog("FarmSim Setup Hoàn Tất", "Đã tạo xong Player và các con vật (Gà, Bò, Heo, Chó) cùng toàn bộ Prefabs và chuyển động trong scene Dev_B!\n\nBây giờ bạn chỉ cần bấm nút Play (▶) để chơi thử!", "Tuyệt vời!");
+        Debug.Log("🎉 [FarmSim] ĐÃ CẬP NHẬT: Gà, Bò, Cừu di chuyển phẳng 1 ô (không nhảy) và thở nhẹ nhàng!");
+        if (!silent)
+        {
+            EditorUtility.DisplayDialog("FarmSim",
+                "Đã cập nhật xong!\n\n" +
+                "- Các con vật (Gà, Bò, Cừu) bây giờ bước đi phẳng mượt mà 1 ô (KHÔNG CÒN NHẢY).\n" +
+                "- Khi đi có hiệu ứng lắc thân nhẹ (waddle), khi đứng yên thở phập phồng nhẹ.\n\n" +
+                "Bấm nút Play (▶) để xem các con vật bước đi nhé!", "Tuyệt vời!");
+        }
     }
 
-    static void CreateAnimalPrefab(string name, Vector3 pos, Sprite sprite, float speed, float radius, float bobSpeed, float bobAmount)
+    static GameObject CreateOrUpdateAnimalPrefab(string name, Sprite sprite, float stepDuration, AnimalWander.AnimalType type)
     {
-        GameObject go = GameObject.Find(name);
-        if (go == null) go = new GameObject(name);
-        go.transform.position = pos;
-
-        var sr = go.GetComponent<SpriteRenderer>();
-        if (sr == null) sr = go.AddComponent<SpriteRenderer>();
-        if (sprite != null) sr.sprite = sprite;
+        string prefabPath = $"Assets/Prefabs/{name}.prefab";
+        GameObject go = new GameObject(name);
+        var sr = go.AddComponent<SpriteRenderer>();
+        sr.sprite = sprite;
         sr.sortingLayerName = "Crops";
 
-        var col = go.GetComponent<BoxCollider2D>();
-        if (col == null) col = go.AddComponent<BoxCollider2D>();
+        var col = go.AddComponent<BoxCollider2D>();
         col.isTrigger = true;
         col.size = new Vector2(0.8f, 0.8f);
 
-        var wander = go.GetComponent<AnimalWander>();
-        if (wander == null) wander = go.AddComponent<AnimalWander>();
+        var wander = go.AddComponent<AnimalWander>();
         var so = new SerializedObject(wander);
-        so.FindProperty("moveSpeed").floatValue = speed;
-        so.FindProperty("roamRadius").floatValue = radius;
-        so.FindProperty("bobSpeed").floatValue = bobSpeed;
-        so.FindProperty("bobAmount").floatValue = bobAmount;
+        so.FindProperty("animalType").enumValueIndex = (int)type;
+        so.FindProperty("stepDistance").floatValue = 1.0f;
+        so.FindProperty("stepDuration").floatValue = stepDuration;
+        so.FindProperty("minWaitTime").floatValue = 2.0f;
+        so.FindProperty("maxWaitTime").floatValue = 4.5f;
+        so.FindProperty("maxStepFromHome").intValue = 4;
+        so.FindProperty("enableIdleBreathing").boolValue = true;
+        so.FindProperty("enableWalkWaddle").boolValue = true;
+        so.FindProperty("spriteRenderer").objectReferenceValue = sr;
         so.ApplyModifiedProperties();
 
-        PrefabUtility.SaveAsPrefabAsset(go, $"Assets/Prefabs/{name}.prefab");
+        GameObject savedPrefab = PrefabUtility.SaveAsPrefabAsset(go, prefabPath);
+        DestroyImmediate(go);
+        return savedPrefab;
+    }
+
+    static GameObject CreateOrUpdateChickenPrefab(Sprite chickenSprite, Sprite eggSprite)
+    {
+        string prefabPath = "Assets/Prefabs/Chicken.prefab";
+        GameObject chicken = new GameObject("Chicken");
+        var sr = chicken.AddComponent<SpriteRenderer>();
+        sr.sprite = chickenSprite;
+        sr.sortingLayerName = "Crops";
+
+        var col = chicken.AddComponent<BoxCollider2D>();
+        col.isTrigger = true;
+        col.size = new Vector2(0.8f, 0.8f);
+
+        GameObject eggObj = new GameObject("EggIcon");
+        eggObj.transform.SetParent(chicken.transform);
+        eggObj.transform.localPosition = new Vector3(0, 0.6f, 0);
+        var eggSr = eggObj.AddComponent<SpriteRenderer>();
+        eggSr.sprite = eggSprite;
+        eggSr.sortingLayerName = "Crops";
+        eggSr.sortingOrder = 5;
+
+        var chickComp = chicken.AddComponent<Chicken>();
+        var chickSo = new SerializedObject(chickComp);
+        chickSo.FindProperty("body").objectReferenceValue = sr;
+        chickSo.FindProperty("eggIcon").objectReferenceValue = eggObj;
+        var eggAsset = AssetDatabase.LoadAssetAtPath<CropData>("Assets/Data/Crops/Egg.asset");
+        if (eggAsset != null) chickSo.FindProperty("eggItem").objectReferenceValue = eggAsset;
+        chickSo.ApplyModifiedProperties();
+
+        var wander = chicken.AddComponent<AnimalWander>();
+        var so = new SerializedObject(wander);
+        so.FindProperty("animalType").enumValueIndex = (int)AnimalWander.AnimalType.Chicken;
+        so.FindProperty("stepDistance").floatValue = 1.0f;
+        so.FindProperty("stepDuration").floatValue = 0.35f;
+        so.FindProperty("minWaitTime").floatValue = 1.5f;
+        so.FindProperty("maxWaitTime").floatValue = 4.0f;
+        so.FindProperty("maxStepFromHome").intValue = 3;
+        so.FindProperty("enableIdleBreathing").boolValue = true;
+        so.FindProperty("enableWalkWaddle").boolValue = true;
+        so.FindProperty("spriteRenderer").objectReferenceValue = sr;
+        so.ApplyModifiedProperties();
+
+        GameObject savedPrefab = PrefabUtility.SaveAsPrefabAsset(chicken, prefabPath);
+        DestroyImmediate(chicken);
+        return savedPrefab;
+    }
+
+    static void AddAnimalsToCurrentScene(GameObject cowPrefab, GameObject sheepPrefab)
+    {
+        Scene currentScene = SceneManager.GetActiveScene();
+        if (!currentScene.isLoaded) return;
+
+        bool changed = false;
+
+        // Kiểm tra xem đã có Bò chưa
+        if (GameObject.Find("Cow") == null && cowPrefab != null)
+        {
+            GameObject cow = (GameObject)PrefabUtility.InstantiatePrefab(cowPrefab);
+            cow.name = "Cow";
+            cow.transform.position = new Vector3(3.5f, 3.5f, 0f);
+            Undo.RegisterCreatedObjectUndo(cow, "Add Cow");
+            changed = true;
+        }
+
+        // Kiểm tra xem đã có Cừu chưa
+        if (GameObject.Find("Sheep") == null && sheepPrefab != null)
+        {
+            GameObject sheep = (GameObject)PrefabUtility.InstantiatePrefab(sheepPrefab);
+            sheep.name = "Sheep";
+            sheep.transform.position = new Vector3(5.0f, 3.0f, 0f);
+            Undo.RegisterCreatedObjectUndo(sheep, "Add Sheep");
+            changed = true;
+        }
+
+        // Cập nhật các con gà trong ChickensRoot
+        GameObject chickensRoot = GameObject.Find("ChickensRoot");
+        if (chickensRoot != null)
+        {
+            foreach (Transform chickTransform in chickensRoot.transform)
+            {
+                var wander = chickTransform.GetComponent<AnimalWander>();
+                if (wander == null)
+                    wander = chickTransform.gameObject.AddComponent<AnimalWander>();
+
+                var so = new SerializedObject(wander);
+                so.FindProperty("stepDistance").floatValue = 1.0f;
+                so.FindProperty("stepDuration").floatValue = 0.35f;
+                so.FindProperty("enableIdleBreathing").boolValue = true;
+                so.FindProperty("enableWalkWaddle").boolValue = true;
+                so.ApplyModifiedProperties();
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            EditorSceneManager.MarkSceneDirty(currentScene);
+            EditorSceneManager.SaveScene(currentScene);
+        }
     }
 }
 #endif
