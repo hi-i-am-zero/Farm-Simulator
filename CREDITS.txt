@@ -1,0 +1,16 @@
+Farm Simulator 2D
+
+Art:
+- Tiny Farm by Kenney (www.kenney.nl)
+- License: Creative Commons Zero (CC0 1.0)
+- https://creativecommons.org/publicdomain/zero/1.0/
+- Pack page: https://kenney.nl/assets/tiny-farm
+
+Player sprites:
+- Custom / Kenney-compatible 16x16 character sheets in Assets/Art/Player
+
+Engine:
+- Unity 6 LTS, Universal 2D (URP)
+
+Font (optional):
+- Be Vietnam Pro / Noto Sans (Google Fonts) if added under Assets/Fonts

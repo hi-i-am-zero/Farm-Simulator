@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 514611b31133cda4fb9af95e80d92a9f, type: 3}
+  m_Name: Carrot
+  m_EditorClassIdentifier: Assembly-CSharp::CropData
+  cropName: "C\xE0 r\u1ED1t"
+  seedPrice: 10
+  sellPrice: 25
+  growTime: 10
+  icon: {fileID: 6279054037598063169, guid: 423958b88809aca43beaa5e29f92676c, type: 3}
+  growthSprites:
+  - {fileID: -558852649991698011, guid: 8550cd14d97c942469c9696e26f4b6f6, type: 3}
+  - {fileID: 843629608526838009, guid: b43fcd2b8b986fa4bbd84c1d68493c86, type: 3}
+  - {fileID: 6279054037598063169, guid: 423958b88809aca43beaa5e29f92676c, type: 3}
+  hasBestSeason: 1
+  bestSeason: 0

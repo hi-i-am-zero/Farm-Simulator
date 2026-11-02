@@ -11,7 +11,21 @@ public class PlotUnlocker : MonoBehaviour
     public int UnlockedCount { get; private set; }
     int NextCost => baseCost * (UnlockedCount + 1);
 
-    void Start() => RefreshLabel();
+    void Start()
+    {
+        // Đồng bộ nếu object đã bật sẵn trên scene (tránh mua lại thứ đang hiện)
+        if (lockedPlots != null && lockedPlots.Length > 0)
+        {
+            int on = 0;
+            for (int i = 0; i < lockedPlots.Length; i++)
+            {
+                if (lockedPlots[i] != null && lockedPlots[i].activeSelf) on = i + 1;
+                else break;
+            }
+            if (on > 0) UnlockedCount = on;
+        }
+        RefreshLabel();
+    }
 
     // Gắn vào nút "Mua"
     public void BuyPlot()

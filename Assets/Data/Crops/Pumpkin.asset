@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 514611b31133cda4fb9af95e80d92a9f, type: 3}
+  m_Name: Pumpkin
+  m_EditorClassIdentifier: Assembly-CSharp::CropData
+  cropName: "B\xED ng\xF4"
+  seedPrice: 60
+  sellPrice: 190
+  growTime: 60
+  icon: {fileID: 5731981955572824522, guid: df527b455ca75404da0886da40540d7a, type: 3}
+  growthSprites:
+  - {fileID: -4409446715219994729, guid: c067f364f4a071b418d2cbf5b38c905a, type: 3}
+  - {fileID: 5731981955572824522, guid: df527b455ca75404da0886da40540d7a, type: 3}
+  - {fileID: 8724667134466148687, guid: 439f35e362450d74db866163082281d9, type: 3}
+  hasBestSeason: 1
+  bestSeason: 2

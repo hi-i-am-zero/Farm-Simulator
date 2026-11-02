@@ -35,7 +35,6 @@ public class PlayerVisual : MonoBehaviour
 
         if (Mathf.Abs(delta.x) > 0.0001f) sprite.flipX = delta.x < 0;
 
-        // Frame animation if provided
         Sprite[] activeClip = moving ? runSprites : idleSprites;
         if (activeClip != null && activeClip.Length > 0)
         {
@@ -45,7 +44,6 @@ public class PlayerVisual : MonoBehaviour
         }
         else
         {
-            // Fallback bobbing animation as in PDF
             float bob = moving ? Mathf.Abs(Mathf.Sin(Time.time * bobSpeed)) * bobAmount : 0f;
             sprite.transform.localPosition = startPos + Vector3.up * bob;
         }
