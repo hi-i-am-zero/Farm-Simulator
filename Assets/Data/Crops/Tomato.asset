@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 514611b31133cda4fb9af95e80d92a9f, type: 3}
+  m_Name: Tomato
+  m_EditorClassIdentifier: Assembly-CSharp::CropData
+  cropName: "C\xE0 chua"
+  seedPrice: 25
+  sellPrice: 70
+  growTime: 25
+  icon: {fileID: -1844213531876117813, guid: c352ba1e6216a014c812f74b1b09bb56, type: 3}
+  growthSprites:
+  - {fileID: -5454188878937622727, guid: 0fec87c858e2b5b48a2a34f859741383, type: 3}
+  - {fileID: -4136700708010962521, guid: 543b6feb5b07d8341aef70135341a90a, type: 3}
+  - {fileID: -1844213531876117813, guid: c352ba1e6216a014c812f74b1b09bb56, type: 3}
+  hasBestSeason: 1
+  bestSeason: 1
