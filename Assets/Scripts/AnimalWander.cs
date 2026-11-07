@@ -27,23 +27,23 @@ public class AnimalWander : MonoBehaviour
     bool isStepping = false;
     float waitTimer;
     Vector3 originalScale;
+    Rigidbody2D rb;
 
     void Awake()
     {
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        var rb = GetComponent<Rigidbody2D>();
-        if (rb != null)
-        {
-            rb.gravityScale = 0f;
-            rb.freezeRotation = true;
-            rb.bodyType = RigidbodyType2D.Kinematic;
-        }
+        rb = GetComponent<Rigidbody2D>();
+        if (rb == null) rb = gameObject.AddComponent<Rigidbody2D>();
+        rb.gravityScale = 0f;
+        rb.freezeRotation = true;
+        rb.bodyType = RigidbodyType2D.Kinematic;
     }
 
     void Start()
     {
         homePos = new Vector2(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y));
         currentGridPos = homePos;
+        if (rb != null) rb.position = currentGridPos;
         transform.position = new Vector3(currentGridPos.x, currentGridPos.y, transform.position.z);
         originalScale = transform.localScale;
         waitTimer = Random.Range(minWaitTime, maxWaitTime);
@@ -153,7 +153,10 @@ public class AnimalWander : MonoBehaviour
 
             // BƯỚC ĐI TRƯỢT PHẲNG MẶT ĐẤT (KHÔNG NHẢY)
             Vector2 currentPos = Vector2.Lerp(start, target, smoothT);
-            transform.position = new Vector3(currentPos.x, currentPos.y, transform.position.z);
+            if (rb != null)
+                rb.MovePosition(currentPos);
+            else
+                transform.position = new Vector3(currentPos.x, currentPos.y, transform.position.z);
 
             // Lắc nhẹ thân mình mô phỏng bước đi
             if (enableWalkWaddle)
@@ -165,6 +168,8 @@ public class AnimalWander : MonoBehaviour
             yield return null;
         }
 
+        if (rb != null)
+            rb.MovePosition(target);
         transform.position = new Vector3(target.x, target.y, transform.position.z);
         transform.rotation = Quaternion.identity;
         transform.localScale = originalScale;

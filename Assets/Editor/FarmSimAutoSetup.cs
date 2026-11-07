@@ -1,4 +1,4 @@
-#if UNITY_EDITOR
+﻿#if UNITY_EDITOR
 using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -16,6 +16,7 @@ public static class FarmSimAutoRunner
     static void RunAutoSetup()
     {
         FarmSimAutoSetup.ExecuteSetup(silent: true);
+        FarmSimAutoSetup.ExecuteColliderSetup(silent: true);
     }
 }
 
@@ -218,6 +219,342 @@ public class FarmSimAutoSetup : EditorWindow
             EditorSceneManager.MarkSceneDirty(currentScene);
             EditorSceneManager.SaveScene(currentScene);
         }
+    }
+    [MenuItem("FarmSim/CÃ i Ä‘áº·t va cháº¡m (Decor, NPC & CÃ¢y trá»“ng)", false, 2)]
+    public static void MenuSetupColliders()
+    {
+        ExecuteColliderSetup(silent: false);
+    }
+
+    public static void ExecuteColliderSetup(bool silent = true)
+    {
+        // 1. CÃ i Ä‘áº·t ColliderType = None cho táº¥t cáº£ cÃ¡c Tile cÃ¢y trá»“ng, Ä‘áº¥t ruá»™ng, hoa cá»
+        string[] passableTileNames = new string[] {
+            "tilemap_12", "tilemap_24", "tilemap_36",
+            "tilemap_30", "tilemap_42", "tilemap_43", "tilemap_66",
+            "tilemap_110", "tilemap_111", "tilemap_112", "tilemap_113", "tilemap_114", "tilemap_115", "tilemap_116",
+            "tilemap_39", "tilemap_71", "tilemap_74", "tilemap_75", "tilemap_76"
+        };
+        foreach (var tName in passableTileNames)
+        {
+            var tile = AssetDatabase.LoadAssetAtPath<UnityEngine.Tilemaps.Tile>($"Assets/TileMap/{tName}.asset");
+            if (tile != null && tile.colliderType != UnityEngine.Tilemaps.Tile.ColliderType.None)
+            {
+                tile.colliderType = UnityEngine.Tilemaps.Tile.ColliderType.None;
+                EditorUtility.SetDirty(tile);
+            }
+        }
+        AssetDatabase.SaveAssets();
+
+        // 2. CÃ i Ä‘áº·t va cháº¡m cá»©ng cháº·n Player (Decor & 4 NPC)
+        string[] solidTargetNames = new string[] {
+            "Decor",
+            "NpcChick",
+            "NpcCow",
+            "NPCcrop",
+            "NpcSheep",
+            "ChickenShop",
+            "Buildings",
+            "Structures"
+        };
+
+        int solidCount = 0;
+        foreach (var name in solidTargetNames)
+        {
+            var go = FindGameObjectAnywhere(name);
+            if (go != null)
+            {
+                if (go.GetComponent<UnityEngine.Tilemaps.Tilemap>() != null)
+                {
+                    AddTilemapColliders(go);
+                    solidCount++;
+                }
+                else if (go.GetComponent<Collider2D>() == null)
+                {
+                    var box = Undo.AddComponent<BoxCollider2D>(go);
+                    box.size = new Vector2(1f, 1f);
+                    box.isTrigger = false;
+                    solidCount++;
+                }
+            }
+        }
+
+        // 3. Xá»­ lÃ½ triá»‡t Ä‘á»ƒ cho Decor trong khu vá»±c Ã´ ruá»™ng:
+        // Äáº·t ColliderType.None cho toÃ n bá»™ cÃ¡c Ã´ trong ruá»™ng Decor (X: -22..-14, Y: -22..-10)
+        var decorGo = FindGameObjectAnywhere("Decor");
+        if (decorGo != null)
+        {
+            var decorTm = decorGo.GetComponent<UnityEngine.Tilemaps.Tilemap>();
+            if (decorTm != null)
+            {
+                for (int x = -22; x <= -14; x++)
+                {
+                    for (int y = -22; y <= -10; y++)
+                    {
+                        var pos = new Vector3Int(x, y, 0);
+                        if (decorTm.HasTile(pos))
+                        {
+                            decorTm.SetColliderType(pos, UnityEngine.Tilemaps.Tile.ColliderType.None);
+                        }
+                    }
+                }
+            }
+
+            var comp = decorGo.GetComponent<CompositeCollider2D>();
+            if (comp != null)
+            {
+                comp.GenerateGeometry();
+            }
+        }
+
+        // 4. Ruá»™ng cÃ¢y (TreeToSell): Gá»¡ bá» va cháº¡m Ä‘á»ƒ Player Ä‘i láº¡i tá»± do trong ruá»™ng
+        string[] passableTargetNames = new string[] { "TreeToSell" };
+        int passableCount = 0;
+        foreach (var name in passableTargetNames)
+        {
+            var go = FindGameObjectAnywhere(name);
+            if (go != null)
+            {
+                RemoveColliders(go);
+                passableCount++;
+            }
+        }
+
+        var scene = SceneManager.GetActiveScene();
+        if (scene.isLoaded)
+        {
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene);
+        }
+
+        if (!silent)
+        {
+            EditorUtility.DisplayDialog("FarmSim",
+                $"ÄÃƒ CÃ€I Äáº¶T VA CHáº M THÃ€NH CÃ”NG!\n\n" +
+                $"1. Cháº·n Player khÃ´ng cho Ä‘i xuyÃªn qua ({solidCount} Ä‘á»‘i tÆ°á»£ng):\n" +
+                $"   - Decor (CÃ¢y cá»‘i, Ä‘Ã¡, thÃ¹ng, rÆ°Æ¡ng...)\n" +
+                $"   - 4 NPC (NpcChick, NpcCow, NPCcrop, NpcSheep)\n\n" +
+                $"2. ÄÃƒ Má»ž CHO PHÃ‰P ÄI XUYÃŠN QUA Ã” RUá»˜NG:\n" +
+                $"   - Cáº£ cÃ¢y trá»“ng vÃ  Ä‘áº¥t ruá»™ng trong Ã´ ruá»™ng Decor Ä‘Ã£ Ä‘Æ°á»£c bá» va cháº¡m!\n" +
+                $"   - Player cÃ³ thá»ƒ thoáº£i mÃ¡i Ä‘i láº¡i chÄƒm sÃ³c, thu hoáº¡ch giá»¯a cÃ¡c luá»‘ng cÃ¢y!",
+                "Tuyá»‡t vá»i");
+        }
+    }
+
+    public static void AddTilemapColliders(GameObject go)
+    {
+        var tilemapCol = go.GetComponent<UnityEngine.Tilemaps.TilemapCollider2D>();
+        if (tilemapCol == null) tilemapCol = Undo.AddComponent<UnityEngine.Tilemaps.TilemapCollider2D>(go);
+        tilemapCol.compositeOperation = Collider2D.CompositeOperation.Merge;
+        tilemapCol.isTrigger = false;
+
+        var compCol = go.GetComponent<CompositeCollider2D>();
+        if (compCol == null) compCol = Undo.AddComponent<CompositeCollider2D>(go);
+        compCol.geometryType = CompositeCollider2D.GeometryType.Polygons;
+
+        var rb = go.GetComponent<Rigidbody2D>();
+        if (rb == null) rb = Undo.AddComponent<Rigidbody2D>(go);
+        rb.bodyType = RigidbodyType2D.Static;
+        rb.simulated = true;
+
+        compCol.GenerateGeometry();
+    }
+
+    public static void RemoveColliders(GameObject go)
+    {
+        var compCol = go.GetComponent<CompositeCollider2D>();
+        if (compCol != null) Undo.DestroyObjectImmediate(compCol);
+
+        var rb = go.GetComponent<Rigidbody2D>();
+        if (rb != null) Undo.DestroyObjectImmediate(rb);
+
+        var tilemapCol = go.GetComponent<UnityEngine.Tilemaps.TilemapCollider2D>();
+        if (tilemapCol != null) Undo.DestroyObjectImmediate(tilemapCol);
+
+        var anyCol = go.GetComponent<Collider2D>();
+        if (anyCol != null) Undo.DestroyObjectImmediate(anyCol);
+    }
+
+    public static GameObject FindGameObjectAnywhere(string name)
+    {
+        var go = GameObject.Find(name);
+        if (go != null) return go;
+
+        var scene = SceneManager.GetActiveScene();
+        if (!scene.isLoaded) return null;
+
+        foreach (var root in scene.GetRootGameObjects())
+        {
+            var found = FindInChildren(root.transform, name);
+            if (found != null) return found.gameObject;
+        }
+        return null;
+    }
+
+    static Transform FindInChildren(Transform parent, string name)
+    {
+        if (string.Equals(parent.name, name, System.StringComparison.OrdinalIgnoreCase))
+            return parent;
+        foreach (Transform child in parent)
+        {
+            var res = FindInChildren(child, name);
+            if (res != null) return res;
+        }
+        return null;
+    }
+
+    [MenuItem("FarmSim/Xáº¿p GÃ , BÃ², Cá»«u vÃ o Ä‘Ãºng chuá»“ng", false, 3)]
+    public static void PlaceAnimalsIntoPens()
+    {
+        ExecutePlaceAnimals(silent: false);
+    }
+
+    public static void ExecutePlaceAnimals(bool silent = true)
+    {
+        var scene = SceneManager.GetActiveScene();
+        if (!scene.isLoaded) return;
+
+        // Load Prefabs
+        GameObject chickenPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Chicken.prefab");
+        GameObject cowPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Cow.prefab");
+        GameObject sheepPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Sheep.prefab");
+
+        // 1. CHUá»’NG GÃ€ (GÃ³c trÃªn bÃªn pháº£i, cáº¡nh NpcChick: X=8.5..12.5, Y=-15..-13)
+        GameObject chickensRoot = GameObject.Find("ChickensRoot");
+        if (chickensRoot == null)
+        {
+            chickensRoot = new GameObject("ChickensRoot");
+            Undo.RegisterCreatedObjectUndo(chickensRoot, "Create ChickensRoot");
+        }
+
+        Vector3[] chickenPositions = new Vector3[] {
+            new Vector3(9.5f, -14.0f, 0f),
+            new Vector3(11.0f, -13.5f, 0f),
+            new Vector3(12.0f, -14.5f, 0f)
+        };
+
+        int chickenIdx = 0;
+        foreach (Transform child in chickensRoot.transform)
+        {
+            if (chickenIdx < chickenPositions.Length)
+            {
+                Undo.RecordObject(child, "Move Chicken");
+                child.position = chickenPositions[chickenIdx++];
+                ConfigureWander(child.gameObject, 2);
+            }
+        }
+        while (chickenIdx < chickenPositions.Length && chickenPrefab != null)
+        {
+            GameObject chick = (GameObject)PrefabUtility.InstantiatePrefab(chickenPrefab, chickensRoot.transform);
+            chick.name = $"Chicken_{chickenIdx + 1}";
+            chick.transform.position = chickenPositions[chickenIdx++];
+            ConfigureWander(chick, 2);
+            Undo.RegisterCreatedObjectUndo(chick, "Spawn Chicken");
+        }
+
+        // 2. CHUá»’NG BÃ’ (GÃ³c dÆ°á»›i bÃªn trÃ¡i, dÆ°á»›i nhÃ  giá»¯a cÃ³ mÃ¡ng Äƒn: X=-15.5..-12.5, Y=-26..-24)
+        GameObject cowsRoot = GameObject.Find("CowsRoot");
+        if (cowsRoot == null)
+        {
+            cowsRoot = new GameObject("CowsRoot");
+            Undo.RegisterCreatedObjectUndo(cowsRoot, "Create CowsRoot");
+        }
+
+        Vector3[] cowPositions = new Vector3[] {
+            new Vector3(-15.0f, -25.0f, 0f),
+            new Vector3(-13.0f, -25.5f, 0f)
+        };
+
+        var existingCow = GameObject.Find("Cow");
+        if (existingCow != null && existingCow.transform.parent != cowsRoot.transform)
+        {
+            Undo.SetTransformParent(existingCow.transform, cowsRoot.transform, "Parent Cow");
+        }
+
+        int cowIdx = 0;
+        foreach (Transform child in cowsRoot.transform)
+        {
+            if (cowIdx < cowPositions.Length)
+            {
+                Undo.RecordObject(child, "Move Cow");
+                child.position = cowPositions[cowIdx++];
+                ConfigureWander(child.gameObject, 2);
+            }
+        }
+        while (cowIdx < cowPositions.Length && cowPrefab != null)
+        {
+            GameObject cow = (GameObject)PrefabUtility.InstantiatePrefab(cowPrefab, cowsRoot.transform);
+            cow.name = $"Cow_{cowIdx + 1}";
+            cow.transform.position = cowPositions[cowIdx++];
+            ConfigureWander(cow, 2);
+            Undo.RegisterCreatedObjectUndo(cow, "Spawn Cow");
+        }
+
+        // 3. CHUá»’NG Cá»ªU (GÃ³c dÆ°á»›i bÃªn pháº£i, cáº¡nh NpcSheep: X=5.5..8.5, Y=-24..-22.5)
+        GameObject sheepRoot = GameObject.Find("SheepRoot");
+        if (sheepRoot == null)
+        {
+            sheepRoot = new GameObject("SheepRoot");
+            Undo.RegisterCreatedObjectUndo(sheepRoot, "Create SheepRoot");
+        }
+
+        Vector3[] sheepPositions = new Vector3[] {
+            new Vector3(6.5f, -23.0f, 0f),
+            new Vector3(8.0f, -23.5f, 0f)
+        };
+
+        var existingSheep = GameObject.Find("Sheep");
+        if (existingSheep != null && existingSheep.transform.parent != sheepRoot.transform)
+        {
+            Undo.SetTransformParent(existingSheep.transform, sheepRoot.transform, "Parent Sheep");
+        }
+
+        int sheepIdx = 0;
+        foreach (Transform child in sheepRoot.transform)
+        {
+            if (sheepIdx < sheepPositions.Length)
+            {
+                Undo.RecordObject(child, "Move Sheep");
+                child.position = sheepPositions[sheepIdx++];
+                ConfigureWander(child.gameObject, 2);
+            }
+        }
+        while (sheepIdx < sheepPositions.Length && sheepPrefab != null)
+        {
+            GameObject sheep = (GameObject)PrefabUtility.InstantiatePrefab(sheepPrefab, sheepRoot.transform);
+            sheep.name = $"Sheep_{sheepIdx + 1}";
+            sheep.transform.position = sheepPositions[sheepIdx++];
+            ConfigureWander(sheep, 2);
+            Undo.RegisterCreatedObjectUndo(sheep, "Spawn Sheep");
+        }
+
+        EditorSceneManager.MarkSceneDirty(scene);
+        EditorSceneManager.SaveScene(scene);
+
+        if (!silent)
+        {
+            EditorUtility.DisplayDialog("FarmSim",
+                "ÄÃƒ Xáº¾P GÃ€, BÃ’, Cá»ªU VÃ€O ÄÃšNG Tá»ªNG CHUá»’NG!\n\n" +
+                "- 3 GÃ : ÄÃ£ xáº¿p vÃ o Chuá»“ng GÃ  (gÃ³c trÃªn bÃªn pháº£i, cáº¡nh NpcChick)\n" +
+                "- 2 BÃ²: ÄÃ£ xáº¿p vÃ o Chuá»“ng BÃ² (gÃ³c dÆ°á»›i bÃªn trÃ¡i, dÆ°á»›i nhÃ  giá»¯a cÃ³ mÃ¡ng Äƒn)\n" +
+                "- 2 Cá»«u: ÄÃ£ xáº¿p vÃ o Chuá»“ng Cá»«u (gÃ³c dÆ°á»›i bÃªn pháº£i, cáº¡nh NpcSheep)\n\n" +
+                "Táº¥t cáº£ con váº­t Ä‘Ã£ Ä‘Æ°á»£c cÃ i Ä‘áº·t Ä‘i pháº³ng 1 Ã´, láº¯c thÃ¢n nháº¹, thá»Ÿ nháº¹ vÃ  á»Ÿ yÃªn trong chuá»“ng!",
+                "Tuyá»‡t vá»i");
+        }
+    }
+
+    static void ConfigureWander(GameObject go, int maxSteps)
+    {
+        var wander = go.GetComponent<AnimalWander>();
+        if (wander == null) wander = Undo.AddComponent<AnimalWander>(go);
+
+        var so = new SerializedObject(wander);
+        so.FindProperty("stepDistance").floatValue = 1.0f;
+        so.FindProperty("stepDuration").floatValue = 0.40f;
+        so.FindProperty("maxStepFromHome").intValue = maxSteps;
+        so.FindProperty("enableIdleBreathing").boolValue = true;
+        so.FindProperty("enableWalkWaddle").boolValue = true;
+        so.ApplyModifiedProperties();
     }
 }
 #endif
