@@ -3599,7 +3599,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Kho tr\u1ED1ng"
+  m_text: Kho trong
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -4581,7 +4581,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Mua \xF4 \u0111\u1EA5t (100$)"
+  m_text: Mua o dat (100$)
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -32416,7 +32416,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "Xu\xE2n - N\u1EAFng\nT\u1ED1c \u0111\u1ED9 l\u1EDBn: +20%"
+  m_text: 'Xuan - Nang
+
+    Toc do lon: +20%'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -32940,7 +32942,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "C\xE0 r\u1ED1t"
+  m_text: Ca rot
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -35822,7 +35824,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "C\xE0 r\u1ED1t (10$)"
+  m_text: Ca rot (10$)
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -71437,12 +71439,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31c147a2118e2e94e9e359a2a64e027f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlotUnlocker
-  lockedPlots:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  lockedPlots: []
   baseCost: 100
-  itemName: "\xF4 \u0111\u1EA5t"
+  itemName: o dat
   buttonLabel: {fileID: 603740496}
 --- !u!4 &1793555508
 Transform:
