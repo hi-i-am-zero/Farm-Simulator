@@ -125,8 +125,8 @@ public class Plot : MonoBehaviour, IInteractable, IGrowable
         }
 
         var gm = GameManager.Instance;
-        if (gm.SelectedCrop == null) { Toast.Show("Hãy chọn hạt giống"); return; }
-        if (!gm.TrySpend(gm.SelectedCrop.seedPrice)) return;
+        if (gm.SelectedCrop == null) { Toast.Show("Hãy mua hạt ở NPC trồng cây"); return; }
+        if (!gm.TryConsumeSeed(gm.SelectedCrop)) return;
         SetCrop(gm.SelectedCrop, DateTime.UtcNow.Ticks);
         AudioManager.Instance?.Play("plant");
     }
@@ -135,7 +135,7 @@ public class Plot : MonoBehaviour, IInteractable, IGrowable
     {
         if (Crop == null)
         {
-            Toast.Show(IsTilled ? "Chọn hạt để trồng" : "Chọn cuốc để làm đất");
+            Toast.Show(IsTilled ? "Mua hạt ở NPC rồi chọn tool Hạt" : "Chọn cuốc để làm đất");
             return;
         }
 

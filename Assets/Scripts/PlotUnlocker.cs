@@ -9,9 +9,11 @@ public class PlotUnlocker : MonoBehaviour
     [SerializeField] TMP_Text buttonLabel;
 
     public int UnlockedCount { get; private set; }
+    public string ItemName => itemName;
+    public int NextCost => baseCost * (UnlockedCount + 1);
+    public bool IsSoldOut => UnlockedCount >= LockedCount;
 
     int LockedCount => lockedPlots == null ? 0 : lockedPlots.Length;
-    int NextCost => baseCost * (UnlockedCount + 1);
 
     void Start()
     {
@@ -28,22 +30,32 @@ public class PlotUnlocker : MonoBehaviour
         RefreshLabel();
     }
 
-    // Gắn vào nút "Mua"
-    public void BuyPlot()
+    // Gắn vào nút "Mua" / NPC shop
+    public void BuyPlot() => TryBuy();
+
+    public bool TryBuy()
     {
-        if (UnlockedCount >= LockedCount) return;
+        if (IsSoldOut)
+        {
+            Toast.Show($"Đã bán hết {itemName}");
+            return false;
+        }
+
         var target = lockedPlots[UnlockedCount];
         if (target == null)
         {
             Debug.LogWarning($"PlotUnlocker '{name}': lockedPlots[{UnlockedCount}] chua gan object.", this);
-            return;
+            return false;
         }
-        if (!GameManager.Instance.TrySpend(NextCost)) return;
+
+        if (!GameManager.Instance.TrySpend(NextCost)) return false;
 
         target.SetActive(true);
         UnlockedCount++;
+        Toast.Show($"Đã mua {itemName}!");
         AudioManager.Instance?.Play("click");
         RefreshLabel();
+        return true;
     }
 
     public void ApplyUnlocked(int count)

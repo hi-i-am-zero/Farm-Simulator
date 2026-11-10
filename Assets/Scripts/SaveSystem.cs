@@ -22,8 +22,11 @@ public class SaveData
     public int weather;
     public int unlockedPlots;
     public int unlockedChickens;
+    public int unlockedCows;
+    public int unlockedSheep;
     public List<PlotSave> plots = new();
     public List<HarvestSave> harvest = new();
+    public List<HarvestSave> seeds = new();
     public List<long> chickenFedTicks = new();
     public List<Order> orders = new();
     public List<string> ownedTools = new();

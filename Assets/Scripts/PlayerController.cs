@@ -13,8 +13,8 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        // Đang tạm dừng thì không điều khiển, không tương tác
-        if (Time.timeScale == 0f) { input = Vector2.zero; return; }
+        // Đang tạm dừng / đang nói chuyện với NPC thì không điều khiển
+        if (Time.timeScale == 0f || ShopUI.IsOpen) { input = Vector2.zero; return; }
 
         input = new Vector2(Input.GetAxisRaw("Horizontal"),
                             Input.GetAxisRaw("Vertical")).normalized;
@@ -25,6 +25,7 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
+        if (ShopUI.IsOpen) return;
         rb.MovePosition(rb.position + input * speed * Time.fixedDeltaTime);
     }
 
@@ -36,8 +37,12 @@ public class PlayerController : MonoBehaviour
 
         foreach (var h in hits)
         {
-            if (!h.TryGetComponent(out IInteractable target)) continue;
-            float d = ((Vector2)h.transform.position - (Vector2)transform.position).sqrMagnitude;
+            if (!h.TryGetComponent(out IInteractable target))
+                target = h.GetComponentInParent<IInteractable>();
+            if (target == null) continue;
+
+            Vector2 point = h.ClosestPoint(transform.position);
+            float d = (point - (Vector2)transform.position).sqrMagnitude;
             if (d < bestDist) { bestDist = d; best = target; }
         }
 

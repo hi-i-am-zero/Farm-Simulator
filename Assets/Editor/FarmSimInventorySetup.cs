@@ -238,16 +238,8 @@ public static class FarmSimInventorySetup
 
         panel.SetActive(false);
 
-        var invButton = CreateButton(canvas.transform, "InventoryButton", "Kho (I)",
-            new Vector2(1, 0.5f), new Vector2(1, 0.5f),
-            new Vector2(-160, -160), new Vector2(280, 64));
-
-        var toggle = invButton.AddComponent<PanelToggle>();
-        var tSo = new SerializedObject(toggle);
-        tSo.FindProperty("panel").objectReferenceValue = panel;
-        tSo.FindProperty("key").intValue = (int)KeyCode.I;
-        tSo.ApplyModifiedPropertiesWithoutUndo();
-        UnityEventTools.AddPersistentListener(invButton.GetComponent<Button>().onClick, toggle.Toggle);
+        // Nut Kho dang icon — FarmSimHudCleanupSetup tao lai; tranh nut chu to
+        // (giu PanelToggle phim I qua cleanup / OrdersHotkey)
 
         var uiRoot = new GameObject("InventoryUIRoot");
         var invUi = uiRoot.AddComponent<InventoryUI>();

@@ -13,6 +13,7 @@ public class GameManager : MonoBehaviour
     public CropData SelectedCrop { get; private set; }
     public ToolData SelectedTool { get; private set; }
     public readonly Dictionary<CropData, int> Harvested = new();
+    public readonly Dictionary<CropData, int> Seeds = new();
     readonly HashSet<string> ownedTools = new();
 
     public event Action<int> OnMoneyChanged;
@@ -20,6 +21,7 @@ public class GameManager : MonoBehaviour
     public event Action<ToolData> OnToolSelected;
     public event Action OnInventoryChanged;
     public event Action OnToolsOwnedChanged;
+    public event Action OnSeedsChanged;
 
     void Awake()
     {
@@ -28,6 +30,67 @@ public class GameManager : MonoBehaviour
         Money = startMoney;
         SelectedCrop = defaultCrop;
         SelectedTool = null;
+    }
+
+    public int SeedCount(CropData crop)
+    {
+        if (crop == null) return 0;
+        Seeds.TryGetValue(crop, out int n);
+        return n;
+    }
+
+    public bool TryBuySeed(CropData crop)
+    {
+        if (crop == null) return false;
+        if (!TrySpend(crop.seedPrice)) return false;
+        Seeds.TryGetValue(crop, out int n);
+        Seeds[crop] = n + 1;
+        SelectCrop(crop);
+        OnSeedsChanged?.Invoke();
+        Toast.Show($"Đã mua hạt {crop.cropName} (túi: {Seeds[crop]})");
+        AudioManager.Instance?.Play("sell");
+        return true;
+    }
+
+    public bool TryConsumeSeed(CropData crop)
+    {
+        if (crop == null || SeedCount(crop) <= 0)
+        {
+            Toast.Show("Hãy mua hạt ở NPC trồng cây");
+            return false;
+        }
+
+        int left = Seeds[crop] - 1;
+        if (left > 0) Seeds[crop] = left;
+        else Seeds.Remove(crop);
+        OnSeedsChanged?.Invoke();
+        return true;
+    }
+
+    public List<HarvestSave> GetSeedSaves()
+    {
+        var list = new List<HarvestSave>();
+        foreach (var kv in Seeds)
+        {
+            if (kv.Key == null || kv.Value <= 0) continue;
+            list.Add(new HarvestSave { cropName = kv.Key.cropName, count = kv.Value });
+        }
+        return list;
+    }
+
+    public void ApplySeeds(IEnumerable<HarvestSave> saves, CropDatabase db)
+    {
+        Seeds.Clear();
+        if (saves != null && db != null)
+        {
+            foreach (var s in saves)
+            {
+                var crop = db.Find(s.cropName);
+                if (crop != null && s.count > 0)
+                    Seeds[crop] = s.count;
+            }
+        }
+        OnSeedsChanged?.Invoke();
     }
 
     public void SelectCrop(CropData crop)

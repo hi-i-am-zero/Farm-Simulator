@@ -11,6 +11,10 @@ public class HUD : MonoBehaviour
 
     void Start()
     {
+        // Kho dung icon button; an chu dem o goc (tranh so "0" can Pause)
+        if (inventoryText != null)
+            inventoryText.gameObject.SetActive(false);
+
         var gm = GameManager.Instance;
         gm.OnMoneyChanged += RefreshMoney;
         gm.OnInventoryChanged += RefreshInventory;
@@ -34,15 +38,20 @@ public class HUD : MonoBehaviour
     void OnCropSelected(CropData _) => RefreshSelected();
     void OnToolSelected(ToolData _) => RefreshSelected();
 
-    void RefreshMoney(int money) => moneyText.text = $"Tiền: {money}$";
+    void RefreshMoney(int money)
+    {
+        if (moneyText != null)
+            moneyText.text = $"Tiền: {money}$";
+    }
 
     void RefreshInventory()
     {
-        if (inventoryText == null) return;
+        // Giữ logic phòng khi bật lại inventoryText sau này
+        if (inventoryText == null || !inventoryText.gameObject.activeSelf) return;
         int total = 0;
         foreach (var kv in GameManager.Instance.Harvested)
             total += kv.Value;
-        inventoryText.text = total == 0 ? "Kho: 0 (I)" : $"Kho: {total} món (I)";
+        inventoryText.text = total == 0 ? "Kho: 0" : $"Kho: {total} món";
     }
 
     void RefreshSelected()
@@ -55,9 +64,12 @@ public class HUD : MonoBehaviour
         if (tool == null)
         {
             selectedIcon.enabled = false;
-            selectedLabel.text = "Chưa có công cụ";
+            selectedLabel.text = "";
+            selectedLabel.enabled = false;
             return;
         }
+
+        selectedLabel.enabled = true;
 
         if (tool.type == ToolType.Seed)
         {
@@ -65,7 +77,8 @@ public class HUD : MonoBehaviour
             if (crop == null)
             {
                 selectedIcon.enabled = false;
-                selectedLabel.text = "Hạt: chưa chọn";
+                selectedLabel.text = "";
+                selectedLabel.enabled = false;
                 return;
             }
 

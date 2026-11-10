@@ -7,6 +7,8 @@ public class SaveManager : MonoBehaviour
     [SerializeField] CropDatabase cropDb;
     [SerializeField] PlotUnlocker unlocker;         // mở ô đất
     [SerializeField] PlotUnlocker chickenUnlocker;  // mở gà
+    [SerializeField] PlotUnlocker cowUnlocker;
+    [SerializeField] PlotUnlocker sheepUnlocker;
     [SerializeField] OrderManager orderManager;
     [SerializeField] WorldEnvironment environment;
     [SerializeField] float autoSaveInterval = 30f;
@@ -46,7 +48,9 @@ public class SaveManager : MonoBehaviour
             timeOfDay = DayCycle.Instance.TimeOfDay,
             weather = environment != null ? environment.WeatherIndex : 0,
             unlockedPlots = unlocker != null ? unlocker.UnlockedCount : 0,
-            unlockedChickens = chickenUnlocker != null ? chickenUnlocker.UnlockedCount : 0
+            unlockedChickens = chickenUnlocker != null ? chickenUnlocker.UnlockedCount : 0,
+            unlockedCows = cowUnlocker != null ? cowUnlocker.UnlockedCount : 0,
+            unlockedSheep = sheepUnlocker != null ? sheepUnlocker.UnlockedCount : 0
         };
 
         if (plots != null)
@@ -76,6 +80,8 @@ public class SaveManager : MonoBehaviour
             data.harvest.Add(new HarvestSave { cropName = kv.Key.cropName, count = kv.Value });
         }
 
+        data.seeds.AddRange(gm.GetSeedSaves());
+
         if (orderManager != null) data.orders.AddRange(orderManager.Orders);
         data.ownedTools.AddRange(gm.GetOwnedToolIds());
 
@@ -90,6 +96,7 @@ public class SaveManager : MonoBehaviour
         // Save cũ có thể thiếu các trường mới
         data.plots ??= new();
         data.harvest ??= new();
+        data.seeds ??= new();
         data.chickenFedTicks ??= new();
         data.orders ??= new();
         data.ownedTools ??= new();
@@ -97,13 +104,16 @@ public class SaveManager : MonoBehaviour
         var gm = GameManager.Instance;
         gm.Money = data.money;
         gm.ApplyOwnedTools(data.ownedTools);
+        gm.ApplySeeds(data.seeds, cropDb);
 
         DayCycle.Instance.Day = Mathf.Max(1, data.day);
         DayCycle.Instance.TimeOfDay = data.timeOfDay;
 
-        // Bật ô và gà trước khi nạp trạng thái
-        unlocker.ApplyUnlocked(data.unlockedPlots);
+        // Bật ô và vật nuôi trước khi nạp trạng thái
+        if (unlocker != null) unlocker.ApplyUnlocked(data.unlockedPlots);
         if (chickenUnlocker != null) chickenUnlocker.ApplyUnlocked(data.unlockedChickens);
+        if (cowUnlocker != null) cowUnlocker.ApplyUnlocked(data.unlockedCows);
+        if (sheepUnlocker != null) sheepUnlocker.ApplyUnlocked(data.unlockedSheep);
 
         for (int i = 0; i < plots.Length && i < data.plots.Count; i++)
         {
