@@ -3,7 +3,7 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Farm/Crop")]
 public class CropData : ScriptableObject
 {
-    public string cropName = "Cà rốt";
+    public string cropName = "Ca rot";
     public int seedPrice = 10;
     public int sellPrice = 25;
     public float growTime = 10f; // giây

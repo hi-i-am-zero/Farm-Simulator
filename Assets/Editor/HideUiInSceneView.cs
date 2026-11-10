@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -13,6 +14,7 @@ using UnityEngine.SceneManagement;
 public static class HideUiInSceneView
 {
     const string PrefKey = "FarmSim.HideUiInSceneView";
+    const string FlagPath = "Assets/Editor/FORCE_HIDE_UI.flag";
 
     static HideUiInSceneView()
     {
@@ -38,6 +40,15 @@ public static class HideUiInSceneView
 
     static void Apply()
     {
+        if (File.Exists(FlagPath))
+        {
+            try { File.Delete(FlagPath); } catch { /* ignore */ }
+            EditorPrefs.SetBool(PrefKey, true);
+            SetHidden(true);
+            Debug.Log("[FarmSim] FORCE_HIDE_UI: đã ẩn Canvas trong Scene View.");
+            return;
+        }
+
         if (!EditorPrefs.GetBool(PrefKey, true)) return;
         SetHidden(true);
     }
@@ -50,6 +61,7 @@ public static class HideUiInSceneView
             if (!scene.isLoaded) continue;
             foreach (var root in scene.GetRootGameObjects())
             {
+                // Ẩn cả Canvas và mọi TextMeshProUGUI (chữ TMP hay hiện to trong Scene)
                 foreach (var canvas in root.GetComponentsInChildren<Canvas>(true))
                 {
                     if (hide) SceneVisibilityManager.instance.Hide(canvas.gameObject, true);
@@ -60,3 +72,4 @@ public static class HideUiInSceneView
     }
 }
 #endif
+
