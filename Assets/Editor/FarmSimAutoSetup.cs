@@ -220,20 +220,19 @@ public class FarmSimAutoSetup : EditorWindow
             EditorSceneManager.SaveScene(currentScene);
         }
     }
-    [MenuItem("FarmSim/CÃ i Ä‘áº·t va cháº¡m (Decor, NPC & CÃ¢y trá»“ng)", false, 2)]
+    [MenuItem("FarmSim/Cài đặt va chạm (Chuồng, Máng nước, Decor & NPC)", false, 2)]
     public static void MenuSetupColliders()
     {
         ExecuteColliderSetup(silent: false);
     }
 
-    public static void ExecuteColliderSetup(bool silent = true)
+        public static void ExecuteColliderSetup(bool silent = true)
     {
-        // 1. CÃ i Ä‘áº·t ColliderType = None cho táº¥t cáº£ cÃ¡c Tile cÃ¢y trá»“ng, Ä‘áº¥t ruá»™ng, hoa cá»
+        // 1. CÃ i Ä‘áº·t ColliderType:
+        // - Chá»‰ duy nháº¥t cÃ¢y trá»“ng máº«u cá»§a NPC (tilemap_12, tilemap_24, tilemap_36) cÃ³ ColliderType = None (Ä‘i xuyÃªn qua)
+        // - ToÃ n bá»™ cÃ¡c Tile khÃ¡c (MÃ¡ng nÆ°á»›c, mÃ¡ng Äƒn, cÃ¢y cá»‘i, Ä‘Ã¡, hÃ ng rÃ o, nhÃ  cá»­a...) Ä‘á»u cÃ³ ColliderType = Grid (cháº·n cá»©ng 100%)
         string[] passableTileNames = new string[] {
-            "tilemap_12", "tilemap_24", "tilemap_36",
-            "tilemap_30", "tilemap_42", "tilemap_43", "tilemap_66",
-            "tilemap_110", "tilemap_111", "tilemap_112", "tilemap_113", "tilemap_114", "tilemap_115", "tilemap_116",
-            "tilemap_39", "tilemap_71", "tilemap_74", "tilemap_75", "tilemap_76"
+            "tilemap_12", "tilemap_24", "tilemap_36"
         };
         foreach (var tName in passableTileNames)
         {
@@ -244,71 +243,149 @@ public class FarmSimAutoSetup : EditorWindow
                 EditorUtility.SetDirty(tile);
             }
         }
+
+        // Äáº£m báº£o táº¥t cáº£ cÃ¡c Tile khÃ¡c trong Assets/TileMap Ä‘á»u lÃ  Grid (cháº·n 100%)
+        string[] allTileGuids = AssetDatabase.FindAssets("t:Tile", new[] { "Assets/TileMap" });
+        foreach (var guid in allTileGuids)
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            var tile = AssetDatabase.LoadAssetAtPath<UnityEngine.Tilemaps.Tile>(path);
+            if (tile == null) continue;
+
+            bool isPassable = false;
+            foreach (var p in passableTileNames)
+            {
+                if (tile.name.Equals(p, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    isPassable = true;
+                    break;
+                }
+            }
+
+            if (!isPassable && tile.colliderType != UnityEngine.Tilemaps.Tile.ColliderType.Grid)
+            {
+                tile.colliderType = UnityEngine.Tilemaps.Tile.ColliderType.Grid;
+                EditorUtility.SetDirty(tile);
+            }
+        }
         AssetDatabase.SaveAssets();
 
-        // 2. CÃ i Ä‘áº·t va cháº¡m cá»©ng cháº·n Player (Decor & 4 NPC)
+        // 2. Danh sach Tilemap va GameObject can CHAN CUNG (Chuong, Mang nuoc, Mang an, Hang rao, Nha, Cay coi, NPC)
         string[] solidTargetNames = new string[] {
             "Decor",
+            "Fences",
+            "House",
+            "Roof",
             "NpcChick",
             "NpcCow",
-            "NPCcrop",
             "NpcSheep",
             "ChickenShop",
             "Buildings",
             "Structures"
         };
 
+        // Danh sach can CHO PHEP DI QUA (Ruong trong cay, ruong mau, mat dat)
+        string[] passableTargetNames = new string[] {
+            "Field",
+            "TreeToSell",
+            "NPCcrop",
+            "Ground"
+        };
+
+        // 3. Xu ly triet de cho tat ca cac Tilemap chuong, mang nuoc, hang rao, nha cua, cay coi
+        string[] obstacleTilemapNames = new string[] { "Decor", "Fences", "House", "Roof" };
         int solidCount = 0;
-        foreach (var name in solidTargetNames)
+
+        foreach (var tmName in obstacleTilemapNames)
+        {
+            var go = FindGameObjectAnywhere(tmName);
+            if (go == null) continue;
+            var tm = go.GetComponent<UnityEngine.Tilemaps.Tilemap>();
+            if (tm == null) continue;
+
+            BoundsInt bounds = tm.cellBounds;
+            for (int x = bounds.xMin; x < bounds.xMax; x++)
+            {
+                for (int y = bounds.yMin; y < bounds.yMax; y++)
+                {
+                    var pos = new Vector3Int(x, y, 0);
+                    if (!tm.HasTile(pos)) continue;
+
+                    var tile = tm.GetTile(pos);
+                    string tName = tile != null ? tile.name : "";
+
+                    // Neu la cay trong mau NPC tren Decor thi cho di xuyen qua (None)
+                    if (tmName.Equals("Decor", System.StringComparison.OrdinalIgnoreCase) &&
+                        (tName.Equals("tilemap_12", System.StringComparison.OrdinalIgnoreCase) ||
+                         tName.Equals("tilemap_24", System.StringComparison.OrdinalIgnoreCase) ||
+                         tName.Equals("tilemap_36", System.StringComparison.OrdinalIgnoreCase)))
+                    {
+                        tm.SetColliderType(pos, UnityEngine.Tilemaps.Tile.ColliderType.None);
+                    }
+                    else
+                    {
+                        // Tat ca cac o khac (Mang nuoc, mang an, hang rao, cay coi, nha cua...) deu chan 100%
+                        tm.SetColliderType(pos, UnityEngine.Tilemaps.Tile.ColliderType.Grid);
+                    }
+                }
+            }
+            tm.RefreshAllTiles();
+            AddTilemapColliders(go);
+            solidCount++;
+        }
+
+        // Cai dat BoxCollider2D cho cac NPC
+        string[] npcNames = new string[] { "NpcChick", "NpcCow", "NpcSheep", "ChickenShop" };
+        foreach (var name in npcNames)
         {
             var go = FindGameObjectAnywhere(name);
             if (go != null)
             {
-                if (go.GetComponent<UnityEngine.Tilemaps.Tilemap>() != null)
-                {
-                    AddTilemapColliders(go);
-                    solidCount++;
-                }
-                else if (go.GetComponent<Collider2D>() == null)
+                if (go.GetComponent<Collider2D>() == null)
                 {
                     var box = Undo.AddComponent<BoxCollider2D>(go);
                     box.size = new Vector2(1f, 1f);
                     box.isTrigger = false;
-                    solidCount++;
                 }
+                solidCount++;
             }
         }
 
-        // 3. Xá»­ lÃ½ triá»‡t Ä‘á»ƒ cho Decor trong khu vá»±c Ã´ ruá»™ng:
-        // Äáº·t ColliderType.None cho toÃ n bá»™ cÃ¡c Ã´ trong ruá»™ng Decor (X: -22..-14, Y: -22..-10)
-        var decorGo = FindGameObjectAnywhere("Decor");
-        if (decorGo != null)
+        // Quet tat ca cac Grid trong Scene de xu ly moi Tilemap con
+        var allTilemaps = Object.FindObjectsByType<UnityEngine.Tilemaps.Tilemap>(FindObjectsSortMode.None);
+        foreach (var tm in allTilemaps)
         {
-            var decorTm = decorGo.GetComponent<UnityEngine.Tilemaps.Tilemap>();
-            if (decorTm != null)
+            string tmName = tm.name;
+            bool isPassable = false;
+            foreach (var p in passableTargetNames)
             {
-                for (int x = -22; x <= -14; x++)
+                if (string.Equals(tmName, p, System.StringComparison.OrdinalIgnoreCase))
                 {
-                    for (int y = -22; y <= -10; y++)
+                    isPassable = true;
+                    break;
+                }
+            }
+
+            if (isPassable)
+            {
+                RemoveColliders(tm.gameObject);
+                BoundsInt bounds = tm.cellBounds;
+                for (int x = bounds.xMin; x < bounds.xMax; x++)
+                {
+                    for (int y = bounds.yMin; y < bounds.yMax; y++)
                     {
                         var pos = new Vector3Int(x, y, 0);
-                        if (decorTm.HasTile(pos))
+                        if (tm.HasTile(pos))
                         {
-                            decorTm.SetColliderType(pos, UnityEngine.Tilemaps.Tile.ColliderType.None);
+                            tm.SetColliderType(pos, UnityEngine.Tilemaps.Tile.ColliderType.None);
                         }
                     }
                 }
-            }
-
-            var comp = decorGo.GetComponent<CompositeCollider2D>();
-            if (comp != null)
-            {
-                comp.GenerateGeometry();
+                tm.RefreshAllTiles();
             }
         }
 
-        // 4. Ruá»™ng cÃ¢y (TreeToSell): Gá»¡ bá» va cháº¡m Ä‘á»ƒ Player Ä‘i láº¡i tá»± do trong ruá»™ng
-        string[] passableTargetNames = new string[] { "TreeToSell" };
+        // 4. Go bo va cham cho Ruong Field, TreeToSell, NPCcrop
         int passableCount = 0;
         foreach (var name in passableTargetNames)
         {
@@ -330,19 +407,29 @@ public class FarmSimAutoSetup : EditorWindow
         if (!silent)
         {
             EditorUtility.DisplayDialog("FarmSim",
-                $"ÄÃƒ CÃ€I Äáº¶T VA CHáº M THÃ€NH CÃ”NG!\n\n" +
-                $"1. Cháº·n Player khÃ´ng cho Ä‘i xuyÃªn qua ({solidCount} Ä‘á»‘i tÆ°á»£ng):\n" +
-                $"   - Decor (CÃ¢y cá»‘i, Ä‘Ã¡, thÃ¹ng, rÆ°Æ¡ng...)\n" +
-                $"   - 4 NPC (NpcChick, NpcCow, NPCcrop, NpcSheep)\n\n" +
-                $"2. ÄÃƒ Má»ž CHO PHÃ‰P ÄI XUYÃŠN QUA Ã” RUá»˜NG:\n" +
-                $"   - Cáº£ cÃ¢y trá»“ng vÃ  Ä‘áº¥t ruá»™ng trong Ã´ ruá»™ng Decor Ä‘Ã£ Ä‘Æ°á»£c bá» va cháº¡m!\n" +
-                $"   - Player cÃ³ thá»ƒ thoáº£i mÃ¡i Ä‘i láº¡i chÄƒm sÃ³c, thu hoáº¡ch giá»¯a cÃ¡c luá»‘ng cÃ¢y!",
-                "Tuyá»‡t vá»i");
+                "DA CAI DAT VA CHAM THANH CONG!\n\n" +
+                "1. CHAN CUNG KHONG THE DI XUYEN QUA:\n" +
+                "   - Mang nuoc & Mang thuc an\n" +
+                "   - Chuong & Hang rao (Fences)\n" +
+                "   - Toan bo Decor (Cay thong vien, cay coi, da, thung...)\n" +
+                "   - Nha cua & Mai nha (House, Roof)\n" +
+                "   - Cac NPC (NpcChick, NpcCow, NpcSheep, ChickenShop)\n\n" +
+                "2. CHO PHEP DI XUYEN QUA TU DO:\n" +
+                "   - Ruong trong cay cua nguoi choi (Field, TreeToSell)\n" +
+                "   - Cay trong mau cua NPC (tilemap_12, 24, 36)\n\n" +
+                "Hay bam Play de thu nghiem nhe!",
+                "Tuyet voi!");
         }
     }
 
     public static void AddTilemapColliders(GameObject go)
     {
+        var tm = go.GetComponent<UnityEngine.Tilemaps.Tilemap>();
+        if (tm != null)
+        {
+            tm.RefreshAllTiles();
+        }
+
         var tilemapCol = go.GetComponent<UnityEngine.Tilemaps.TilemapCollider2D>();
         if (tilemapCol == null) tilemapCol = Undo.AddComponent<UnityEngine.Tilemaps.TilemapCollider2D>(go);
         tilemapCol.compositeOperation = Collider2D.CompositeOperation.Merge;
@@ -351,6 +438,7 @@ public class FarmSimAutoSetup : EditorWindow
         var compCol = go.GetComponent<CompositeCollider2D>();
         if (compCol == null) compCol = Undo.AddComponent<CompositeCollider2D>(go);
         compCol.geometryType = CompositeCollider2D.GeometryType.Polygons;
+        compCol.generationType = CompositeCollider2D.GenerationType.Synchronous;
 
         var rb = go.GetComponent<Rigidbody2D>();
         if (rb == null) rb = Undo.AddComponent<Rigidbody2D>(go);

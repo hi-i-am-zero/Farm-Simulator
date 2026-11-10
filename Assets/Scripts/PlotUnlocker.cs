@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class PlotUnlocker : MonoBehaviour
 {
-    [SerializeField] GameObject[] lockedPlots;
+    [SerializeField] GameObject[] lockedPlots = new GameObject[0];
     [SerializeField] int baseCost = 100;
     [SerializeField] string itemName = "o dat";
     [SerializeField] TMP_Text buttonLabel;
