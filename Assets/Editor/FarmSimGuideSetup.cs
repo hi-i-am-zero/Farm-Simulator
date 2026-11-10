@@ -731,7 +731,8 @@ public static class FarmSimGuideSetup
         UnityEventTools.AddPersistentListener(resetButton.GetComponent<Button>().onClick, save.ResetSave);
         UnityEventTools.AddPersistentListener(resumeBtn.GetComponent<Button>().onClick, pauseMenu.Resume);
         UnityEventTools.AddPersistentListener(menuBtn.GetComponent<Button>().onClick, pauseMenu.BackToMenu);
-        UnityEventTools.AddPersistentListener(quitBtn.GetComponent<Button>().onClick, pauseMenu.Quit);
+        // Nut Thoat trong pause da bo — an di, khong wire Quit
+        quitBtn.SetActive(false);
 
         // Hierarchy order: HUD → Orders → Weather → Rain → Night → Toast → Pause
         moneyText.transform.SetSiblingIndex(0);

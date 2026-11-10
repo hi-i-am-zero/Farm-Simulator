@@ -15,6 +15,8 @@ public class MainMenu : MonoBehaviour
     [SerializeField] TMP_Text newGameLabel;
     [SerializeField] Sprite backgroundSprite;
     [SerializeField] GameObject confirmPanel;
+    [SerializeField] Button confirmYesButton;
+    [SerializeField] Button confirmNoButton;
 
     bool built;
 
@@ -48,8 +50,13 @@ public class MainMenu : MonoBehaviour
 
     void OnEnable()
     {
-        // Chi build trong Edit mode
-        if (Application.isPlaying) return;
+        if (Application.isPlaying)
+        {
+            RefreshContinue();
+            return;
+        }
+
+        // Edit mode: build UI neu thieu
         if (continueButton == null)
             BuildDefaultUi();
     }
@@ -57,33 +64,75 @@ public class MainMenu : MonoBehaviour
     void Start()
     {
         Time.timeScale = 1f;
-        RefreshContinue();
         WireButtons();
+        RefreshContinue();
         HideConfirm();
     }
 
     void RefreshContinue()
     {
-        if (continueButton != null)
-            continueButton.interactable = SaveSystem.Exists;
+        if (continueButton == null) return;
+
+        bool hasSave = SaveSystem.Exists;
+
+        // Lan dau: "Bat dau choi"; da choi: "Tiep tuc"
+        continueButton.gameObject.SetActive(true);
+        continueButton.interactable = true;
+        var label = continueButton.GetComponentInChildren<TMP_Text>(true);
+        if (label != null)
+            label.text = hasSave ? "Tiep tuc" : "Bat dau choi";
+
+        // Lan dau khong can "Choi moi" (chua co du lieu de xoa)
+        if (newGameButton != null)
+            newGameButton.gameObject.SetActive(hasSave);
     }
 
     void WireButtons()
     {
         if (continueButton != null)
         {
-            continueButton.onClick.RemoveListener(Continue);
+            continueButton.onClick.RemoveAllListeners();
             continueButton.onClick.AddListener(Continue);
         }
         if (newGameButton != null)
         {
-            newGameButton.onClick.RemoveListener(OnNewGameClicked);
+            newGameButton.onClick.RemoveAllListeners();
             newGameButton.onClick.AddListener(OnNewGameClicked);
         }
         if (quitButton != null)
         {
-            quitButton.onClick.RemoveListener(Quit);
+            quitButton.onClick.RemoveAllListeners();
             quitButton.onClick.AddListener(Quit);
+        }
+
+        WireConfirmButtons();
+    }
+
+    void WireConfirmButtons()
+    {
+        // includeInactive: panel thuong dang tat, GameObject.Find se miss
+        if (confirmPanel != null)
+        {
+            if (confirmYesButton == null || confirmNoButton == null)
+            {
+                var buttons = confirmPanel.GetComponentsInChildren<Button>(true);
+                foreach (var b in buttons)
+                {
+                    if (b.name == "ConfirmYes") confirmYesButton = b;
+                    else if (b.name == "ConfirmNo") confirmNoButton = b;
+                }
+            }
+        }
+
+        if (confirmYesButton != null)
+        {
+            confirmYesButton.onClick.RemoveAllListeners();
+            confirmYesButton.onClick.AddListener(ConfirmNewGame);
+        }
+        if (confirmNoButton != null)
+        {
+            confirmNoButton.onClick.RemoveAllListeners();
+            confirmNoButton.onClick.AddListener(CancelNewGame);
         }
     }
 
@@ -195,7 +244,7 @@ public class MainMenu : MonoBehaviour
             new Vector2(0, 105), new Vector2(480, 40), 24, false);
         subtitle.color = new Color(0.40f, 0.28f, 0.14f, 1f);
 
-        continueButton = CreateMenuButton(panelFace.transform, "ContinueButton", "Tiep tuc",
+        continueButton = CreateMenuButton(panelFace.transform, "ContinueButton", "Bat dau choi",
             new Vector2(0, 30), new Color(0.22f, 0.55f, 0.30f, 1f));
         newGameButton = CreateMenuButton(panelFace.transform, "NewGameButton", "Choi moi",
             new Vector2(0, -55), new Color(0.22f, 0.55f, 0.30f, 1f));
@@ -210,7 +259,22 @@ public class MainMenu : MonoBehaviour
 
     void EnsureConfirmPanel()
     {
-        if (confirmPanel != null) return;
+        if (confirmPanel == null)
+        {
+            // Tim ca object dang inactive
+            var canvas = GameObject.Find("Canvas");
+            if (canvas != null)
+            {
+                var t = canvas.transform.Find("NewGameConfirm");
+                if (t != null) confirmPanel = t.gameObject;
+            }
+        }
+
+        if (confirmPanel != null)
+        {
+            WireConfirmButtons();
+            return;
+        }
 
         var canvasGo = GameObject.Find("Canvas");
         if (canvasGo == null) return;
@@ -233,17 +297,17 @@ public class MainMenu : MonoBehaviour
             "Choi moi se mat het du lieu.\nBan co muon tiep tuc?",
             new Vector2(0, 50), new Vector2(460, 120), 28, true);
         msg.color = new Color(0.28f, 0.16f, 0.06f, 1f);
+        msg.raycastTarget = false;
 
-        var yes = CreateMenuButton(boxInner.transform, "ConfirmYes", "Co",
+        confirmYesButton = CreateMenuButton(boxInner.transform, "ConfirmYes", "Co",
             new Vector2(-110, -70), new Color(0.55f, 0.22f, 0.18f, 1f));
-        yes.GetComponent<RectTransform>().sizeDelta = new Vector2(160, 56);
-        yes.onClick.AddListener(ConfirmNewGame);
+        confirmYesButton.GetComponent<RectTransform>().sizeDelta = new Vector2(160, 56);
 
-        var no = CreateMenuButton(boxInner.transform, "ConfirmNo", "Khong",
+        confirmNoButton = CreateMenuButton(boxInner.transform, "ConfirmNo", "Khong",
             new Vector2(110, -70), new Color(0.22f, 0.55f, 0.30f, 1f));
-        no.GetComponent<RectTransform>().sizeDelta = new Vector2(160, 56);
-        no.onClick.AddListener(CancelNewGame);
+        confirmNoButton.GetComponent<RectTransform>().sizeDelta = new Vector2(160, 56);
 
+        WireConfirmButtons();
         confirmPanel.SetActive(false);
     }
 
@@ -268,6 +332,7 @@ public class MainMenu : MonoBehaviour
         var tmp = CreateTmp(go.transform, "Text", label, Vector2.zero, Vector2.zero, 30, true);
         Stretch(tmp.rectTransform);
         tmp.color = Color.white;
+        tmp.raycastTarget = false;
         return go.GetComponent<Button>();
     }
 

@@ -181,6 +181,13 @@ public class FarmSimAutoSetup : EditorWindow
         Scene currentScene = SceneManager.GetActiveScene();
         if (!currentScene.isLoaded) return;
 
+        // Chi spawn vao scene Main — tranh de Cow/Sheep len MainMenu
+        if (currentScene.name != "Main")
+        {
+            Debug.Log($"[FarmSim] Bo qua spawn dong vat tren scene '{currentScene.name}' (chi Main).");
+            return;
+        }
+
         bool changed = false;
 
         // Kiểm tra xem đã có Bò chưa
@@ -512,6 +519,12 @@ public class FarmSimAutoSetup : EditorWindow
     {
         var scene = SceneManager.GetActiveScene();
         if (!scene.isLoaded) return;
+        if (scene.name != "Main")
+        {
+            if (!silent)
+                EditorUtility.DisplayDialog("FarmSim", "Chi xep dong vat tren scene Main.", "OK");
+            return;
+        }
 
         // Load Prefabs
         GameObject chickenPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefabs/Chicken.prefab");
