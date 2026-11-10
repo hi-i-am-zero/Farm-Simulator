@@ -35,13 +35,17 @@ public class Plot : MonoBehaviour, IInteractable, IGrowable
 
     public void Interact()
     {
-        var tool = GameManager.Instance != null ? GameManager.Instance.SelectedTool : null;
+        // Cay chin: thu hoạch với mọi tool (tránh kẹt khi đang cầm cuốc/hạt)
+        if (IsReady)
+        {
+            Harvest();
+            return;
+        }
 
-        // Chưa mua/chọn tool: vẫn cho thu hoạch cây chín
+        var tool = GameManager.Instance != null ? GameManager.Instance.SelectedTool : null;
         if (tool == null)
         {
-            if (IsReady) Harvest();
-            else Toast.Show("Hãy mua công cụ ở thanh dưới");
+            Toast.Show("Hãy mua công cụ ở thanh dưới");
             return;
         }
 
@@ -125,9 +129,19 @@ public class Plot : MonoBehaviour, IInteractable, IGrowable
         }
 
         var gm = GameManager.Instance;
-        if (gm.SelectedCrop == null) { Toast.Show("Hãy mua hạt ở NPC trồng cây"); return; }
+        gm.EnsureSelectedSeed();
+        if (gm.SelectedCrop == null || gm.SeedCount(gm.SelectedCrop) <= 0)
+        {
+            Toast.Show("Hãy mua hạt ở NPC trồng cây");
+            return;
+        }
         if (!gm.TryConsumeSeed(gm.SelectedCrop)) return;
         SetCrop(gm.SelectedCrop, DateTime.UtcNow.Ticks);
+
+        // Tuoi san truoc khi trong van duoc huong bonus
+        if (IsWatered)
+            AddGrowth(Crop.growTime * 0.4f);
+
         AudioManager.Instance?.Play("plant");
     }
 
@@ -196,10 +210,11 @@ public class Plot : MonoBehaviour, IInteractable, IGrowable
 
     void UpdateVisual()
     {
+        if (cropRenderer == null) return;
+
         if (Crop == null || Crop.growthSprites == null || Crop.growthSprites.Length == 0)
         {
-            if (cropRenderer != null)
-                cropRenderer.sprite = null;
+            cropRenderer.sprite = null;
             return;
         }
 

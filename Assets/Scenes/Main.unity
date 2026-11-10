@@ -2294,13 +2294,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbedfeba281e0ee4b81bb8957c3d9423, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NpcShop
-  shopTitle: Chuong cuu
+  shopTitle: "Chu\u1ED3ng c\u1EEBu"
   offers:
   - label: Mua
     kind: 0
     animalShop: {fileID: 1709805785}
     seedCrop: {fileID: 0}
-  greeting: Len mua cuu nao!
+  greeting: "L\u00EAn mua c\u1EEBu n\u00E0o!"
 --- !u!61 &289593007
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -38458,7 +38458,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbedfeba281e0ee4b81bb8957c3d9423, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NpcShop
-  shopTitle: Thuong lai hat
+  shopTitle: "Th\u01B0\u01A1ng lai h\u1EA1t"
   offers:
   - label: Ca rot
     kind: 1
@@ -38472,7 +38472,7 @@ MonoBehaviour:
     kind: 1
     animalShop: {fileID: 0}
     seedCrop: {fileID: 11400000, guid: a1111111111111111111111111111003, type: 2}
-  greeting: Hat giong tuoi ngon!
+  greeting: "H\u1EA1t gi\u1ED1ng t\u01B0\u01A1i ngon!"
 --- !u!61 &1238913450
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -52147,7 +52147,7 @@ MonoBehaviour:
   - {fileID: 1756135656}
   - {fileID: 1959413856}
   baseCost: 150
-  itemName: ga
+  itemName: "g\u00E0"
   buttonLabel: {fileID: 0}
 --- !u!4 &1515046099
 Transform:
@@ -52938,7 +52938,7 @@ MonoBehaviour:
   - {fileID: 1967269493}
   - {fileID: 1273493148}
   baseCost: 250
-  itemName: bo
+  itemName: "b\u00F2"
   buttonLabel: {fileID: 0}
 --- !u!4 &1645856120
 Transform:
@@ -53259,7 +53259,7 @@ MonoBehaviour:
   - {fileID: 1173624759}
   - {fileID: 649867459}
   baseCost: 200
-  itemName: cuu
+  itemName: "c\u1EEBu"
   buttonLabel: {fileID: 0}
 --- !u!4 &1709805786
 Transform:
@@ -53576,7 +53576,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Dong (Esc)
+  m_text: "\u0110\u00F3ng (Esc)"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -53877,7 +53877,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlotUnlocker
   lockedPlots: []
   baseCost: 100
-  itemName: o dat
+  itemName: "\u00F4 \u0111\u1EA5t"
   buttonLabel: {fileID: 0}
 --- !u!4 &1793555508
 Transform:
@@ -54132,13 +54132,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbedfeba281e0ee4b81bb8957c3d9423, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NpcShop
-  shopTitle: Chuong ga
+  shopTitle: "Chu\u1ED3ng g\u00E0"
   offers:
   - label: Mua
     kind: 0
     animalShop: {fileID: 1515046098}
     seedCrop: {fileID: 0}
-  greeting: Muon mua ga khong?
+  greeting: "Mu\u1ED1n mua g\u00E0 kh\u00F4ng?"
 --- !u!61 &1849153961
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -54558,13 +54558,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dbedfeba281e0ee4b81bb8957c3d9423, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NpcShop
-  shopTitle: Chuong bo
+  shopTitle: "Chu\u1ED3ng b\u00F2"
   offers:
   - label: Mua
     kind: 0
     animalShop: {fileID: 1645856119}
     seedCrop: {fileID: 0}
-  greeting: Bo sua day!
+  greeting: "B\u00F2 s\u1EEFa \u0111\u00E2y!"
 --- !u!61 &1914480531
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -54742,7 +54742,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Ban muon mua gi?
+  m_text: "B\u1EA1n mu\u1ED1n mua g\u00EC?"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -55198,7 +55198,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Cua hang
+  m_text: "C\u1EEDa h\u00E0ng"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}

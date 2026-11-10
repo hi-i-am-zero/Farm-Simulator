@@ -30,6 +30,8 @@ public class PauseMenu : MonoBehaviour
 
     void Update()
     {
+        // Dang noi chuyen NPC: Esc chi dong shop, khong mo Pause
+        if (ShopUI.IsOpen) return;
         if (Input.GetKeyDown(KeyCode.Escape)) Toggle();
     }
 

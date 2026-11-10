@@ -5,7 +5,7 @@ public class PlotUnlocker : MonoBehaviour
 {
     [SerializeField] GameObject[] lockedPlots = new GameObject[0];
     [SerializeField] int baseCost = 100;
-    [SerializeField] string itemName = "o dat";
+    [SerializeField] string itemName = "ô đất";
     [SerializeField] TMP_Text buttonLabel;
 
     public int UnlockedCount { get; private set; }
@@ -58,6 +58,13 @@ public class PlotUnlocker : MonoBehaviour
         return true;
     }
 
+    public void SetLockedPlots(GameObject[] plots)
+    {
+        lockedPlots = plots ?? new GameObject[0];
+        UnlockedCount = 0;
+        RefreshLabel();
+    }
+
     public void ApplyUnlocked(int count)
     {
         if (lockedPlots == null)
@@ -80,7 +87,7 @@ public class PlotUnlocker : MonoBehaviour
     {
         if (buttonLabel == null) return;
         buttonLabel.text = UnlockedCount >= LockedCount
-            ? "Da mo het"
+            ? "Đã mở hết"
             : $"Mua {itemName} ({NextCost}$)";
     }
 }

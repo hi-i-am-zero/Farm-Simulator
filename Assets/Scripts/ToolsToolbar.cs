@@ -20,6 +20,9 @@ public class ToolsToolbar : MonoBehaviour
         gm.OnCropSelected += OnCropSelected;
         gm.OnToolsOwnedChanged += OnToolsOwnedChanged;
 
+        // Tool gia 0 (Tay) tu dong so huu
+        gm.GrantFreeTools(tools);
+        BuildSlots();
         RefreshSelection(gm.SelectedTool);
     }
 

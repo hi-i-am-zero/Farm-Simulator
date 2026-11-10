@@ -45,12 +45,27 @@ public class ShopUI : MonoBehaviour
         current = shop;
         IsOpen = true;
         panel.SetActive(true);
+        // Toast phai nam tren shop de khong bi che
+        EnsureToastAboveShop();
 
         if (titleText != null) titleText.text = shop.ShopTitle;
         if (greetingText != null) greetingText.text = shop.Greeting;
 
         RebuildOffers();
         AudioManager.Instance?.Play("click");
+    }
+
+    static void EnsureToastAboveShop()
+    {
+        var toast = GameObject.Find("ToastRoot");
+        var shop = GameObject.Find("ShopPanel");
+        if (toast == null || shop == null) return;
+        if (toast.transform.parent != shop.transform.parent) return;
+        toast.transform.SetAsLastSibling();
+        shop.transform.SetSiblingIndex(Mathf.Max(0, toast.transform.GetSiblingIndex() - 1));
+        // Shop van can bat input: dat shop cuoi, toast sau shop
+        shop.transform.SetAsLastSibling();
+        toast.transform.SetAsLastSibling();
     }
 
     public void Close()

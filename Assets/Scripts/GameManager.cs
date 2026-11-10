@@ -30,6 +30,22 @@ public class GameManager : MonoBehaviour
         Money = startMoney;
         SelectedCrop = defaultCrop;
         SelectedTool = null;
+
+        // Dam bao co PlotFieldBootstrap (dat o dat neu scene thieu)
+        if (GetComponent<PlotFieldBootstrap>() == null)
+            gameObject.AddComponent<PlotFieldBootstrap>();
+    }
+
+    void Start()
+    {
+        // Collider cung o origin cua ChickenShop day player luc spawn
+        var shop = GameObject.Find("ChickenShop");
+        if (shop == null) return;
+        foreach (var col in shop.GetComponents<Collider2D>())
+        {
+            if (col != null && !col.isTrigger)
+                Destroy(col);
+        }
     }
 
     public int SeedCount(CropData crop)
@@ -90,7 +106,22 @@ public class GameManager : MonoBehaviour
                     Seeds[crop] = s.count;
             }
         }
+        EnsureSelectedSeed();
         OnSeedsChanged?.Invoke();
+    }
+
+    // Sau load / truoc khi trong: chon crop con hat trong tui
+    public void EnsureSelectedSeed()
+    {
+        if (SelectedCrop != null && SeedCount(SelectedCrop) > 0) return;
+        foreach (var kv in Seeds)
+        {
+            if (kv.Key != null && kv.Value > 0)
+            {
+                SelectCrop(kv.Key);
+                return;
+            }
+        }
     }
 
     public void SelectCrop(CropData crop)
@@ -125,14 +156,35 @@ public class GameManager : MonoBehaviour
             return true;
         }
 
-        if (!TrySpend(tool.price)) return false;
+        if (tool.price > 0 && !TrySpend(tool.price)) return false;
 
         ownedTools.Add(tool.name);
         OnToolsOwnedChanged?.Invoke();
         SelectTool(tool);
-        Toast.Show($"Đã mua {tool.displayName}");
+        Toast.Show(tool.price > 0 ? $"Đã mua {tool.displayName}" : $"Đã nhận {tool.displayName}");
         AudioManager.Instance?.Play("sell");
         return true;
+    }
+
+    public void GrantFreeTools(ToolData[] tools)
+    {
+        if (tools == null) return;
+        bool changed = false;
+        foreach (var t in tools)
+        {
+            if (t == null || t.price > 0 || OwnsTool(t)) continue;
+            ownedTools.Add(t.name);
+            changed = true;
+        }
+        if (!changed) return;
+        OnToolsOwnedChanged?.Invoke();
+        if (SelectedTool == null)
+        {
+            foreach (var t in tools)
+            {
+                if (t != null && OwnsTool(t)) { SelectTool(t); break; }
+            }
+        }
     }
 
     public List<string> GetOwnedToolIds() => new(ownedTools);
@@ -219,8 +271,8 @@ public class GameManager : MonoBehaviour
         AddMoney(price);
         bool seasonBonus = price > crop.sellPrice;
         Toast.Show(seasonBonus
-            ? $"Ban 1 {crop.cropName}: +{price}$ (co gia mua vu)"
-            : $"Ban 1 {crop.cropName}: +{price}$");
+            ? $"Bán 1 {crop.cropName}: +{price}$ (có giá mùa vụ)"
+            : $"Bán 1 {crop.cropName}: +{price}$");
         AudioManager.Instance?.Play("sell");
     }
 

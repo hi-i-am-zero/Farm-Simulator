@@ -113,7 +113,7 @@ public class WorldEnvironment : MonoBehaviour
         if (infoText == null) return;
         int pct = Mathf.RoundToInt(GrowthRate * 100f);
         string sign = pct > 0 ? "+" : "";
-        infoText.text = $"{SeasonNames[(int)CurrentSeason]} - {WeatherNames[(int)CurrentWeather]}\nToc do lon: {sign}{pct}%";
+        infoText.text = $"{SeasonNames[(int)CurrentSeason]} - {WeatherNames[(int)CurrentWeather]}\nTốc độ lớn: {sign}{pct}%";
     }
 
     public float SellMultiplier(CropData crop) =>

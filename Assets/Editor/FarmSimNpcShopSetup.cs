@@ -83,26 +83,26 @@ public static class FarmSimNpcShopSetup
         foreach (var go in chickens.Concat(cows).Concat(sheep))
             if (go != null) go.SetActive(false);
 
-        var chickenShop = EnsureUnlocker("ChickenShop", chickens, 150, "ga");
-        var cowShop = EnsureUnlocker("CowShop", cows, 250, "bo");
-        var sheepShop = EnsureUnlocker("SheepShop", sheep, 200, "cuu");
+        var chickenShop = EnsureUnlocker("ChickenShop", chickens, 150, "gà");
+        var cowShop = EnsureUnlocker("CowShop", cows, 250, "bò");
+        var sheepShop = EnsureUnlocker("SheepShop", sheep, 200, "cừu");
 
         WireSaveManager(chickenShop, cowShop, sheepShop);
 
         // Trigger gan NPC (dung ClosestPoint / transform con)
         CreateNpcTrigger("NpcShop_Chick", FindNpcWorldPos("NpcChick", new Vector3(6.5f, -14.5f, 0f)),
-            "Chuong ga", "Muon mua ga khong?", AnimalOffer(chickenShop));
+            "Chuồng gà", "Muốn mua gà không?", AnimalOffer(chickenShop));
         CreateNpcTrigger("NpcShop_Cow", FindNpcWorldPos("NpcCow", new Vector3(-6.5f, -25.5f, 0f)),
-            "Chuong bo", "Bo sua day!", AnimalOffer(cowShop));
+            "Chuồng bò", "Bò sữa đây!", AnimalOffer(cowShop));
         CreateNpcTrigger("NpcShop_Sheep", FindNpcWorldPos("NpcSheep", new Vector3(1.5f, -23.5f, 0f)),
-            "Chuong cuu", "Len mua cuu nao!", AnimalOffer(sheepShop));
+            "Chuồng cừu", "Lên mua cừu nào!", AnimalOffer(sheepShop));
 
         var seedOffers = new[]
         {
             SeedOffer(carrot), SeedOffer(tomato), SeedOffer(pumpkin)
         };
         CreateNpcTrigger("NpcShop_Seed", FindNpcWorldPos("NPCcrop", new Vector3(0.5f, -8f, 0f)),
-            "Thuong lai hat", "Hat giong tuoi ngon!", seedOffers);
+            "Thương lai hạt", "Hạt giống tươi ngon!", seedOffers);
 
         BuildShopUi(canvas.transform);
 
