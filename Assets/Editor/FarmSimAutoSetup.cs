@@ -15,6 +15,8 @@ public static class FarmSimAutoRunner
 
     static void RunAutoSetup()
     {
+        // Khong chay khi dang Play (MarkSceneDirty se nem InvalidOperationException)
+        if (EditorApplication.isPlayingOrWillChangePlaymode) return;
         FarmSimAutoSetup.ExecuteSetup(silent: true);
         FarmSimAutoSetup.ExecuteColliderSetup(silent: true);
     }
@@ -59,6 +61,13 @@ public class FarmSimAutoSetup : EditorWindow
 
     public static void ExecuteSetup(bool silent = false)
     {
+        if (EditorApplication.isPlayingOrWillChangePlaymode)
+        {
+            if (!silent)
+                EditorUtility.DisplayDialog("FarmSim", "Hay thoat Play Mode truoc khi chay cap nhat.", "OK");
+            return;
+        }
+
         if (!Directory.Exists("Assets/Prefabs")) AssetDatabase.CreateFolder("Assets", "Prefabs");
         if (!Directory.Exists("Assets/Scenes")) AssetDatabase.CreateFolder("Assets", "Scenes");
 
@@ -226,8 +235,10 @@ public class FarmSimAutoSetup : EditorWindow
         ExecuteColliderSetup(silent: false);
     }
 
-        public static void ExecuteColliderSetup(bool silent = true)
+    public static void ExecuteColliderSetup(bool silent = true)
     {
+        if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+
         // 1. CÃ i Ä‘áº·t ColliderType:
         // - Chá»‰ duy nháº¥t cÃ¢y trá»“ng máº«u cá»§a NPC (tilemap_12, tilemap_24, tilemap_36) cÃ³ ColliderType = None (Ä‘i xuyÃªn qua)
         // - ToÃ n bá»™ cÃ¡c Tile khÃ¡c (MÃ¡ng nÆ°á»›c, mÃ¡ng Äƒn, cÃ¢y cá»‘i, Ä‘Ã¡, hÃ ng rÃ o, nhÃ  cá»­a...) Ä‘á»u cÃ³ ColliderType = Grid (cháº·n cá»©ng 100%)
@@ -352,7 +363,7 @@ public class FarmSimAutoSetup : EditorWindow
         }
 
         // Quet tat ca cac Grid trong Scene de xu ly moi Tilemap con
-        var allTilemaps = Object.FindObjectsByType<UnityEngine.Tilemaps.Tilemap>(FindObjectsSortMode.None);
+        var allTilemaps = Object.FindObjectsByType<UnityEngine.Tilemaps.Tilemap>();
         foreach (var tm in allTilemaps)
         {
             string tmName = tm.name;

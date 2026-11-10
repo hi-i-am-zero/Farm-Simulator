@@ -52,7 +52,10 @@ public class PauseMenu : MonoBehaviour
     {
         Resume();
         saveManager.Save();
-        SceneManager.LoadScene(menuScene);
+        if (Application.CanStreamedLevelBeLoaded(menuScene))
+            SceneManager.LoadScene(menuScene);
+        else
+            Debug.LogError($"PauseMenu: scene '{menuScene}' chua co trong Build Settings.");
     }
 
     public void Quit()

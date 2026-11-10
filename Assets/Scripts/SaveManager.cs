@@ -18,12 +18,12 @@ public class SaveManager : MonoBehaviour
     void Start()
     {
         // Gồm cả đối tượng đang tắt; sắp theo vị trí để thứ tự luôn cố định
-        plots = FindObjectsByType<Plot>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+        plots = FindObjectsByType<Plot>(FindObjectsInactive.Include)
             .OrderBy(p => p.transform.position.x)
             .ThenBy(p => p.transform.position.y)
             .ToArray();
 
-        chickens = FindObjectsByType<Chicken>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+        chickens = FindObjectsByType<Chicken>(FindObjectsInactive.Include)
             .OrderBy(c => c.transform.position.x)
             .ThenBy(c => c.transform.position.y)
             .ToArray();
@@ -37,27 +37,42 @@ public class SaveManager : MonoBehaviour
         if (resetting) return;
 
         var gm = GameManager.Instance;
+        if (gm == null || DayCycle.Instance == null) return;
+
         var data = new SaveData
         {
             money = gm.Money,
             day = DayCycle.Instance.Day,
             timeOfDay = DayCycle.Instance.TimeOfDay,
             weather = environment != null ? environment.WeatherIndex : 0,
-            unlockedPlots = unlocker.UnlockedCount,
+            unlockedPlots = unlocker != null ? unlocker.UnlockedCount : 0,
             unlockedChickens = chickenUnlocker != null ? chickenUnlocker.UnlockedCount : 0
         };
 
-        foreach (var p in plots)
-            data.plots.Add(new PlotSave
+        if (plots != null)
+        {
+            foreach (var p in plots)
             {
-                cropName = p.Crop != null ? p.Crop.cropName : "",
-                plantedTicks = p.PlantedTicks
-            });
+                if (p == null) continue;
+                data.plots.Add(new PlotSave
+                {
+                    cropName = p.Crop != null ? p.Crop.cropName : "",
+                    plantedTicks = p.PlantedTicks
+                });
+            }
+        }
 
-        foreach (var c in chickens) data.chickenFedTicks.Add(c.FedTicks);
+        if (chickens != null)
+        {
+            foreach (var c in chickens)
+                if (c != null) data.chickenFedTicks.Add(c.FedTicks);
+        }
 
         foreach (var kv in gm.Harvested)
+        {
+            if (kv.Key == null) continue;
             data.harvest.Add(new HarvestSave { cropName = kv.Key.cropName, count = kv.Value });
+        }
 
         if (orderManager != null) data.orders.AddRange(orderManager.Orders);
 
@@ -115,7 +130,11 @@ public class SaveManager : MonoBehaviour
         CancelInvoke(nameof(Save));
         SaveSystem.Delete();
         Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        var scene = SceneManager.GetActiveScene();
+        if (scene.buildIndex >= 0)
+            SceneManager.LoadScene(scene.buildIndex);
+        else
+            SceneManager.LoadScene(scene.name);
     }
 
     void OnApplicationQuit() => Save();

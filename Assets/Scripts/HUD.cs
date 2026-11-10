@@ -1,4 +1,3 @@
-using System.Text;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,10 +33,11 @@ public class HUD : MonoBehaviour
 
     void RefreshInventory()
     {
-        var sb = new StringBuilder();
+        if (inventoryText == null) return;
+        int total = 0;
         foreach (var kv in GameManager.Instance.Harvested)
-            sb.AppendLine($"{kv.Key.cropName} x{kv.Value}");
-        inventoryText.text = sb.Length == 0 ? "Kho trống" : sb.ToString();
+            total += kv.Value;
+        inventoryText.text = total == 0 ? "Kho: 0 (I)" : $"Kho: {total} mon (I)";
     }
 
     void RefreshSelected(CropData crop)
