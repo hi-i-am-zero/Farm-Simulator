@@ -7,7 +7,9 @@ public class AnimalWander : MonoBehaviour
     public enum AnimalType { Chicken, Cow, Sheep, Pig, Dog }
 
     [Header("Loại Động Vật & Di Chuyển 1 Ô")]
+#pragma warning disable CS0414
     [SerializeField] AnimalType animalType = AnimalType.Chicken;
+#pragma warning restore CS0414
     [SerializeField] float stepDistance = 1.0f;  // Đi đúng 1 ô (1 tile)
     [SerializeField] float stepDuration = 0.40f; // Thời gian bước qua 1 ô (mượt mà)
     [SerializeField] float minWaitTime = 2.0f;

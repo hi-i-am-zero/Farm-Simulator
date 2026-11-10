@@ -79,6 +79,26 @@ public class GameManager : MonoBehaviour
         return Mathf.RoundToInt(crop.sellPrice * m);
     }
 
+    // Bán 1 món trong kho
+    public void SellOne(CropData crop)
+    {
+        if (crop == null || Count(crop) <= 0)
+        {
+            Toast.Show("Chưa có gì để bán");
+            return;
+        }
+
+        int price = GetSellPrice(crop);
+        if (!TryTake(crop, 1)) return;
+
+        AddMoney(price);
+        bool seasonBonus = price > crop.sellPrice;
+        Toast.Show(seasonBonus
+            ? $"Ban 1 {crop.cropName}: +{price}$ (co gia mua vu)"
+            : $"Ban 1 {crop.cropName}: +{price}$");
+        AudioManager.Instance?.Play("sell");
+    }
+
     // Gắn vào nút "Bán hết"
     public void SellAll()
     {

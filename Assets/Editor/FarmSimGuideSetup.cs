@@ -228,9 +228,9 @@ public static class FarmSimGuideSetup
         }
 
         // Xoá các Plot / Chicken rời (không phải prefab asset)
-        foreach (var p in Object.FindObjectsByType<Plot>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        foreach (var p in Object.FindObjectsByType<Plot>(FindObjectsInactive.Include))
             if (p != null) Object.DestroyImmediate(p.gameObject);
-        foreach (var c in Object.FindObjectsByType<Chicken>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+        foreach (var c in Object.FindObjectsByType<Chicken>(FindObjectsInactive.Include))
             if (c != null) Object.DestroyImmediate(c.gameObject);
 
         var oldPlayer = GameObject.Find("Player");
@@ -239,7 +239,7 @@ public static class FarmSimGuideSetup
 
     static void PrepareTilemaps(out Tilemap ground, out Tilemap decor, out Tilemap obstacles)
     {
-        var grid = Object.FindFirstObjectByType<Grid>();
+        var grid = Object.FindAnyObjectByType<Grid>();
         if (grid == null)
         {
             var gridGo = new GameObject("Grid", typeof(Grid));
@@ -283,7 +283,7 @@ public static class FarmSimGuideSetup
 
     static void FixGlobalLight()
     {
-        var light = Object.FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None)
+        var light = Object.FindObjectsByType<MonoBehaviour>()
             .FirstOrDefault(m => m.GetType().Name == "Light2D");
         if (light == null) return;
 
@@ -761,7 +761,7 @@ public static class FarmSimGuideSetup
 
     static void EnsureEventSystem()
     {
-        if (Object.FindFirstObjectByType<EventSystem>() != null) return;
+        if (Object.FindAnyObjectByType<EventSystem>() != null) return;
         var es = new GameObject("EventSystem");
         es.AddComponent<EventSystem>();
         // Active Input Handling = Both: Input System UI module
