@@ -820,7 +820,8 @@ public static class FarmSimGuideSetup
     {
         rt.anchorMin = min;
         rt.anchorMax = max;
-        rt.pivot = new Vector2(0.5f, 0.5f);
+        // Pivot khớp anchor góc để chữ/nút không bị tràn ra ngoài màn hình
+        rt.pivot = new Vector2((min.x + max.x) * 0.5f, (min.y + max.y) * 0.5f);
         if (min == Vector2.zero && max == Vector2.one && size == Vector2.zero)
         {
             Stretch(rt);

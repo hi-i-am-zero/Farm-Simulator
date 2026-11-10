@@ -14,11 +14,12 @@ public class HUD : MonoBehaviour
         var gm = GameManager.Instance;
         gm.OnMoneyChanged += RefreshMoney;
         gm.OnInventoryChanged += RefreshInventory;
-        gm.OnCropSelected += RefreshSelected;
+        gm.OnCropSelected += OnCropSelected;
+        gm.OnToolSelected += OnToolSelected;
 
         RefreshMoney(gm.Money);
         RefreshInventory();
-        RefreshSelected(gm.SelectedCrop);
+        RefreshSelected();
     }
 
     void OnDestroy()
@@ -26,8 +27,12 @@ public class HUD : MonoBehaviour
         if (GameManager.Instance == null) return;
         GameManager.Instance.OnMoneyChanged -= RefreshMoney;
         GameManager.Instance.OnInventoryChanged -= RefreshInventory;
-        GameManager.Instance.OnCropSelected -= RefreshSelected;
+        GameManager.Instance.OnCropSelected -= OnCropSelected;
+        GameManager.Instance.OnToolSelected -= OnToolSelected;
     }
+
+    void OnCropSelected(CropData _) => RefreshSelected();
+    void OnToolSelected(ToolData _) => RefreshSelected();
 
     void RefreshMoney(int money) => moneyText.text = $"Tiền: {money}$";
 
@@ -37,19 +42,41 @@ public class HUD : MonoBehaviour
         int total = 0;
         foreach (var kv in GameManager.Instance.Harvested)
             total += kv.Value;
-        inventoryText.text = total == 0 ? "Kho: 0 (I)" : $"Kho: {total} mon (I)";
+        inventoryText.text = total == 0 ? "Kho: 0 (I)" : $"Kho: {total} món (I)";
     }
 
-    void RefreshSelected(CropData crop)
+    void RefreshSelected()
     {
-        if (crop == null)
+        if (selectedLabel == null || selectedIcon == null) return;
+
+        var gm = GameManager.Instance;
+        var tool = gm.SelectedTool;
+
+        if (tool == null)
         {
             selectedIcon.enabled = false;
-            selectedLabel.text = "Chưa chọn";
+            selectedLabel.text = "Chưa có công cụ";
             return;
         }
-        selectedIcon.enabled = crop.icon != null;
-        selectedIcon.sprite = crop.icon;
-        selectedLabel.text = $"{crop.cropName} ({crop.seedPrice}$)";
+
+        if (tool.type == ToolType.Seed)
+        {
+            var crop = gm.SelectedCrop;
+            if (crop == null)
+            {
+                selectedIcon.enabled = false;
+                selectedLabel.text = "Hạt: chưa chọn";
+                return;
+            }
+
+            selectedIcon.enabled = crop.icon != null;
+            selectedIcon.sprite = crop.icon;
+            selectedLabel.text = $"Hạt: {crop.cropName} ({crop.seedPrice}$)";
+            return;
+        }
+
+        selectedIcon.enabled = tool.icon != null;
+        selectedIcon.sprite = tool.icon;
+        selectedLabel.text = tool.displayName;
     }
 }

@@ -31,7 +31,7 @@ public class Toast : MonoBehaviour
     {
         label.text = message;
         label.gameObject.SetActive(true);
-        yield return new WaitForSeconds(showTime);
+        yield return new WaitForSecondsRealtime(showTime);
         label.gameObject.SetActive(false);
     }
 }
