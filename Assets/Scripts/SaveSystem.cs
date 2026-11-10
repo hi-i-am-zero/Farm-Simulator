@@ -3,7 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-[Serializable] public class PlotSave { public string cropName; public long plantedTicks; }
+[Serializable]
+public class PlotSave
+{
+    public string cropName;
+    public long plantedTicks;
+    public bool isTilled;
+    public bool isWatered;
+}
 [Serializable] public class HarvestSave { public string cropName; public int count; }
 
 [Serializable]
@@ -19,6 +26,7 @@ public class SaveData
     public List<HarvestSave> harvest = new();
     public List<long> chickenFedTicks = new();
     public List<Order> orders = new();
+    public List<string> ownedTools = new();
 }
 
 public static class SaveSystem

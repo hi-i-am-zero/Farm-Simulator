@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef322511e0ef1ea46b1313cc5a51aad0, type: 3}
+  m_Name: Seed
+  m_EditorClassIdentifier: Assembly-CSharp::ToolData
+  displayName: "H\u1EA1t gi\u1ED1ng"
+  type: 2
+  icon: {fileID: 6004726093148896001, guid: 37ac41f20eeae2b4a96c9dcb9a1c745e, type: 3}
+  price: 10

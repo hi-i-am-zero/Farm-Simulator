@@ -57,7 +57,9 @@ public class SaveManager : MonoBehaviour
                 data.plots.Add(new PlotSave
                 {
                     cropName = p.Crop != null ? p.Crop.cropName : "",
-                    plantedTicks = p.PlantedTicks
+                    plantedTicks = p.PlantedTicks,
+                    isTilled = p.IsTilled,
+                    isWatered = p.IsWatered
                 });
             }
         }
@@ -75,6 +77,7 @@ public class SaveManager : MonoBehaviour
         }
 
         if (orderManager != null) data.orders.AddRange(orderManager.Orders);
+        data.ownedTools.AddRange(gm.GetOwnedToolIds());
 
         SaveSystem.Save(data);
     }
@@ -89,9 +92,11 @@ public class SaveManager : MonoBehaviour
         data.harvest ??= new();
         data.chickenFedTicks ??= new();
         data.orders ??= new();
+        data.ownedTools ??= new();
 
         var gm = GameManager.Instance;
         gm.Money = data.money;
+        gm.ApplyOwnedTools(data.ownedTools);
 
         DayCycle.Instance.Day = Mathf.Max(1, data.day);
         DayCycle.Instance.TimeOfDay = data.timeOfDay;
@@ -104,7 +109,7 @@ public class SaveManager : MonoBehaviour
         {
             var s = data.plots[i];
             var crop = string.IsNullOrEmpty(s.cropName) ? null : cropDb.Find(s.cropName);
-            plots[i].SetCrop(crop, s.plantedTicks);
+            plots[i].SetState(crop, s.plantedTicks, s.isTilled, s.isWatered);
         }
 
         for (int i = 0; i < chickens.Length && i < data.chickenFedTicks.Count; i++)

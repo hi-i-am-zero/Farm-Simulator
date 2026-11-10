@@ -6,16 +6,20 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [SerializeField] int startMoney = 50;
+    [SerializeField] int startMoney = 80;
     [SerializeField] CropData defaultCrop;
 
     public int Money { get; set; }
     public CropData SelectedCrop { get; private set; }
+    public ToolData SelectedTool { get; private set; }
     public readonly Dictionary<CropData, int> Harvested = new();
+    readonly HashSet<string> ownedTools = new();
 
     public event Action<int> OnMoneyChanged;
     public event Action<CropData> OnCropSelected;
+    public event Action<ToolData> OnToolSelected;
     public event Action OnInventoryChanged;
+    public event Action OnToolsOwnedChanged;
 
     void Awake()
     {
@@ -23,12 +27,70 @@ public class GameManager : MonoBehaviour
         Instance = this;
         Money = startMoney;
         SelectedCrop = defaultCrop;
+        SelectedTool = null;
     }
 
     public void SelectCrop(CropData crop)
     {
         SelectedCrop = crop;
         OnCropSelected?.Invoke(crop);
+    }
+
+    public bool OwnsTool(ToolData tool)
+    {
+        return tool != null && ownedTools.Contains(tool.name);
+    }
+
+    public void SelectTool(ToolData tool)
+    {
+        if (tool != null && !OwnsTool(tool))
+        {
+            Toast.Show($"Chưa có {tool.displayName}");
+            return;
+        }
+
+        SelectedTool = tool;
+        OnToolSelected?.Invoke(tool);
+    }
+
+    public bool TryBuyTool(ToolData tool)
+    {
+        if (tool == null) return false;
+        if (OwnsTool(tool))
+        {
+            SelectTool(tool);
+            return true;
+        }
+
+        if (!TrySpend(tool.price)) return false;
+
+        ownedTools.Add(tool.name);
+        OnToolsOwnedChanged?.Invoke();
+        SelectTool(tool);
+        Toast.Show($"Đã mua {tool.displayName}");
+        AudioManager.Instance?.Play("sell");
+        return true;
+    }
+
+    public List<string> GetOwnedToolIds() => new(ownedTools);
+
+    public void ApplyOwnedTools(IEnumerable<string> ids)
+    {
+        ownedTools.Clear();
+        if (ids != null)
+        {
+            foreach (var id in ids)
+            {
+                if (!string.IsNullOrEmpty(id))
+                    ownedTools.Add(id);
+            }
+        }
+
+        if (SelectedTool != null && !OwnsTool(SelectedTool))
+            SelectedTool = null;
+
+        OnToolsOwnedChanged?.Invoke();
+        OnToolSelected?.Invoke(SelectedTool);
     }
 
     public bool TrySpend(int amount)
@@ -126,5 +188,7 @@ public class GameManager : MonoBehaviour
         OnMoneyChanged?.Invoke(Money);
         OnInventoryChanged?.Invoke();
         OnCropSelected?.Invoke(SelectedCrop);
+        OnToolsOwnedChanged?.Invoke();
+        OnToolSelected?.Invoke(SelectedTool);
     }
 }
