@@ -23,6 +23,9 @@ public class GameManager : MonoBehaviour
     public event Action OnToolsOwnedChanged;
     public event Action OnSeedsChanged;
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    static void ResetStatics() => Instance = null;
+
     void Awake()
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
@@ -34,6 +37,10 @@ public class GameManager : MonoBehaviour
         // Dam bao co PlotFieldBootstrap (dat o dat neu scene thieu)
         if (GetComponent<PlotFieldBootstrap>() == null)
             gameObject.AddComponent<PlotFieldBootstrap>();
+
+        // Đảm bảo có NpcShopBootstrap (tạo và định vị 4 NPC Shop + 3 Chuồng động vật luôn đầy đủ)
+        if (GetComponent<NpcShopBootstrap>() == null)
+            gameObject.AddComponent<NpcShopBootstrap>();
     }
 
     void Start()
@@ -259,21 +266,31 @@ public class GameManager : MonoBehaviour
     // Bán 1 món trong kho
     public void SellOne(CropData crop)
     {
-        if (crop == null || Count(crop) <= 0)
+        SellAmount(crop, 1);
+    }
+
+    /// <summary>
+    /// Bán số lượng tuỳ chọn của một nông sản trong kho
+    /// </summary>
+    public bool SellAmount(CropData crop, int amount)
+    {
+        if (crop == null || amount <= 0 || Count(crop) < amount)
         {
-            Toast.Show("Chưa có gì để bán");
-            return;
+            Toast.Show("Chưa có đủ số lượng để bán");
+            return false;
         }
 
         int price = GetSellPrice(crop);
-        if (!TryTake(crop, 1)) return;
+        int total = price * amount;
+        if (!TryTake(crop, amount)) return false;
 
-        AddMoney(price);
+        AddMoney(total);
         bool seasonBonus = price > crop.sellPrice;
         Toast.Show(seasonBonus
-            ? $"Bán 1 {crop.cropName}: +{price}$ (có giá mùa vụ)"
-            : $"Bán 1 {crop.cropName}: +{price}$");
+            ? $"Bán {amount} {crop.cropName}: +{total}$ (có giá mùa vụ)"
+            : $"Bán {amount} {crop.cropName}: +{total}$");
         AudioManager.Instance?.Play("sell");
+        return true;
     }
 
     // Gắn vào nút "Bán hết"

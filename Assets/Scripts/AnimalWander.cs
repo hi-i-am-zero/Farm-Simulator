@@ -31,9 +31,16 @@ public class AnimalWander : MonoBehaviour
     [Header("Kiểm Tra Vật Cản")]
     [SerializeField] LayerMask blockingLayers = ~0;  // Các Layer chặn đường (tường, rào, chuồng)
 
+    [Header("Giới Hạn Chuồng (Tự động khóa cổng)")]
+    [SerializeField] bool usePenBounds = false;
+    [SerializeField] Vector2 penMinBounds;
+    [SerializeField] Vector2 penMaxBounds;
+
     // ==========================================
     // 2. BIẾN NỘI BỘ QUẢN LÝ TRẠNG THÁI
     // ==========================================
+    public AnimalType Kind => animalType;
+
     Vector2 homePos;          // Vị trí gốc (chuồng/tổ ban đầu)
     Vector2 currentGridPos;   // Tọa độ ô lưới hiện tại
     bool isStepping = false;  // Đang trong quá trình bước đi?
@@ -58,10 +65,47 @@ public class AnimalWander : MonoBehaviour
         rb.bodyType = RigidbodyType2D.Kinematic;
     }
 
+    static Vector2 ToCellCenter(Vector2 pos) => new(Mathf.Floor(pos.x) + 0.5f, Mathf.Floor(pos.y) + 0.5f);
+
+    /// <summary>
+    /// Giới hạn số bước tối đa tính từ vị trí ban đầu.
+    /// </summary>
+    public void SetMaxStepFromHome(int steps) => maxStepFromHome = Mathf.Max(1, steps);
+
+    /// <summary>
+    /// Giới hạn vùng ô lưới mà con vật được phép di chuyển bên trong chuồng.
+    /// </summary>
+    public void SetPenBounds(Vector2 minPos, Vector2 maxPos)
+    {
+        Vector2 minCell = ToCellCenter(minPos);
+        Vector2 maxCell = ToCellCenter(maxPos);
+        penMinBounds = new Vector2(Mathf.Min(minCell.x, maxCell.x), Mathf.Min(minCell.y, maxCell.y));
+        penMaxBounds = new Vector2(Mathf.Max(minCell.x, maxCell.x), Mathf.Max(minCell.y, maxCell.y));
+        usePenBounds = true;
+    }
+
+    bool IsInsidePenBounds(Vector2 pos)
+    {
+        const float eps = 0.05f;
+        return pos.x >= penMinBounds.x - eps && pos.x <= penMaxBounds.x + eps
+            && pos.y >= penMinBounds.y - eps && pos.y <= penMaxBounds.y + eps;
+    }
+
+    Vector2 ClampToPenBounds(Vector2 pos)
+    {
+        return new Vector2(
+            Mathf.Clamp(pos.x, penMinBounds.x, penMaxBounds.x),
+            Mathf.Clamp(pos.y, penMinBounds.y, penMaxBounds.y)
+        );
+    }
+
     void Start()
     {
-        // Làm tròn vị trí ban đầu vào đúng tâm ô lưới (Grid)
-        homePos = new Vector2(Mathf.Round(transform.position.x), Mathf.Round(transform.position.y));
+        // Làm tròn vị trí ban đầu vào đúng tâm ô lưới Tilemap (x + 0.5, y + 0.5)
+        homePos = ToCellCenter(transform.position);
+        if (usePenBounds)
+            homePos = ClampToPenBounds(homePos);
+
         currentGridPos = homePos;
 
         if (rb != null) rb.position = currentGridPos;
@@ -138,7 +182,11 @@ public class AnimalWander : MonoBehaviour
             if (Vector2.Distance(target, homePos) > maxStepFromHome * stepDistance)
                 continue;
 
-            // 2. Kiểm tra ô đích có bị chặn không (tường, hàng rào, con vật khác)
+            // 1b. Không bước ra ngoài giới hạn bên trong chuồng (kể cả qua ô cổng mở)
+            if (usePenBounds && !IsInsidePenBounds(target))
+                continue;
+
+            // 2. Kiểm tra ô đích có bị chặn không (tường, hàng rào, cửa chắn động vật, con vật khác)
             if (IsCellBlocked(target))
                 continue;
 
@@ -164,6 +212,10 @@ public class AnimalWander : MonoBehaviour
 
             // Nếu có con vật khác ở ô này -> bị chặn
             if (col.GetComponent<AnimalWander>() != null || col.GetComponentInParent<AnimalWander>() != null)
+                return true;
+
+            // Cửa chuồng chỉ chắn động vật (dùng Trigger để Player vẫn ra vào tự do)
+            if (col.GetComponent<AnimalGateBlocker>() != null || col.GetComponentInParent<AnimalGateBlocker>() != null)
                 return true;
 
             // Bỏ qua trigger vô hại (như trigger ô đất trồng, trigger tương tác)

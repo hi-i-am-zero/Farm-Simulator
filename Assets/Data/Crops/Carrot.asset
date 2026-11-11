@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 514611b31133cda4fb9af95e80d92a9f, type: 3}
   m_Name: Carrot
   m_EditorClassIdentifier: Assembly-CSharp::CropData
-  cropName: Ca rot
+  cropName: "\u0110\u1EADu"
   seedPrice: 10
-  sellPrice: 25
+  sellPrice: 15
   growTime: 10
   icon: {fileID: 6279054037598063169, guid: 423958b88809aca43beaa5e29f92676c, type: 3}
   growthSprites:

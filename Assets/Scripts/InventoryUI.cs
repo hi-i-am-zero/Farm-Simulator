@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class InventoryUI : MonoBehaviour
 {
@@ -14,6 +15,9 @@ public class InventoryUI : MonoBehaviour
 
     void Start()
     {
+        if (content != null && content.TryGetComponent(out GridLayoutGroup grid) && grid.cellSize.x < 92f)
+            grid.cellSize = new Vector2(96f, 82f);
+
         if (GameManager.Instance == null) return;
         GameManager.Instance.OnInventoryChanged += Refresh;
         GameManager.Instance.OnCropSelected += OnCropSelected;

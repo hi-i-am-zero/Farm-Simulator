@@ -19,6 +19,7 @@ public static class FarmSimAutoRunner
         if (EditorApplication.isPlayingOrWillChangePlaymode) return;
         FarmSimAutoSetup.ExecuteSetup(silent: true);
         FarmSimAutoSetup.ExecuteColliderSetup(silent: true);
+        FarmSimNpcShopSetup.EnsureConfiguredIfNeeded();
     }
 }
 
@@ -190,26 +191,6 @@ public class FarmSimAutoSetup : EditorWindow
 
         bool changed = false;
 
-        // Kiểm tra xem đã có Bò chưa
-        if (GameObject.Find("Cow") == null && cowPrefab != null)
-        {
-            GameObject cow = (GameObject)PrefabUtility.InstantiatePrefab(cowPrefab);
-            cow.name = "Cow";
-            cow.transform.position = new Vector3(3.5f, 3.5f, 0f);
-            Undo.RegisterCreatedObjectUndo(cow, "Add Cow");
-            changed = true;
-        }
-
-        // Kiểm tra xem đã có Cừu chưa
-        if (GameObject.Find("Sheep") == null && sheepPrefab != null)
-        {
-            GameObject sheep = (GameObject)PrefabUtility.InstantiatePrefab(sheepPrefab);
-            sheep.name = "Sheep";
-            sheep.transform.position = new Vector3(5.0f, 3.0f, 0f);
-            Undo.RegisterCreatedObjectUndo(sheep, "Add Sheep");
-            changed = true;
-        }
-
         // Cập nhật các con gà trong ChickensRoot
         GameObject chickensRoot = GameObject.Find("ChickensRoot");
         if (chickensRoot != null)
@@ -297,7 +278,6 @@ public class FarmSimAutoSetup : EditorWindow
             "NpcChick",
             "NpcCow",
             "NpcSheep",
-            "ChickenShop",
             "Buildings",
             "Structures"
         };
@@ -352,8 +332,19 @@ public class FarmSimAutoSetup : EditorWindow
             solidCount++;
         }
 
-        // Cai dat BoxCollider2D cho cac NPC
-        string[] npcNames = new string[] { "NpcChick", "NpcCow", "NpcSheep", "ChickenShop" };
+        // Cai dat BoxCollider2D cho cac NPC (bo qua cac object logic shop nhu ChickenShop/CowShop/SheepShop)
+        string[] npcNames = new string[] { "NpcChick", "NpcCow", "NpcSheep" };
+        foreach (var shopObjName in new[] { "ChickenShop", "CowShop", "SheepShop" })
+        {
+            var shopGo = FindGameObjectAnywhere(shopObjName);
+            if (shopGo != null)
+            {
+                foreach (var col in shopGo.GetComponents<Collider2D>())
+                {
+                    if (col != null) Undo.DestroyObjectImmediate(col);
+                }
+            }
+        }
         foreach (var name in npcNames)
         {
             var go = FindGameObjectAnywhere(name);

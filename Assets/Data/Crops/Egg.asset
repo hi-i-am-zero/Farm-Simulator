@@ -12,11 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 514611b31133cda4fb9af95e80d92a9f, type: 3}
   m_Name: Egg
   m_EditorClassIdentifier: Assembly-CSharp::CropData
-  cropName: "Tr\u1EE9ng"
+  cropName: "Tr\u1EE9ng g\xE0"
   seedPrice: 0
-  sellPrice: 20
+  sellPrice: 10
   growTime: 0
   icon: {fileID: -6977131504767820746, guid: 269db1622c335d94b990d27e1848570e, type: 3}
   growthSprites: []
-  hasBestSeason: 1
-  bestSeason: 3
+  hasBestSeason: 0
+  bestSeason: 0

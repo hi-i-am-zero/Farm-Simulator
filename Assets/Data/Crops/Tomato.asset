@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Tomato
   m_EditorClassIdentifier: Assembly-CSharp::CropData
   cropName: "C\xE0 chua"
-  seedPrice: 25
-  sellPrice: 70
+  seedPrice: 20
+  sellPrice: 30
   growTime: 25
   icon: {fileID: -1844213531876117813, guid: c352ba1e6216a014c812f74b1b09bb56, type: 3}
   growthSprites:

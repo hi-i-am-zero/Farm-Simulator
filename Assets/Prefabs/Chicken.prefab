@@ -275,3 +275,6 @@ MonoBehaviour:
   blockingLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  usePenBounds: 0
+  penMinBounds: {x: 0, y: 0}
+  penMaxBounds: {x: 0, y: 0}

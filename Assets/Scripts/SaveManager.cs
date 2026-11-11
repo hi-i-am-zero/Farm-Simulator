@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 public class SaveManager : MonoBehaviour
 {
     [SerializeField] CropDatabase cropDb;
+    public CropDatabase CropDb => cropDb;
     [SerializeField] PlotUnlocker unlocker;         // mở ô đất
     [SerializeField] PlotUnlocker chickenUnlocker;  // mở gà
     [SerializeField] PlotUnlocker cowUnlocker;

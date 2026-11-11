@@ -5,15 +5,19 @@ public class PlotUnlocker : MonoBehaviour
 {
     [SerializeField] GameObject[] lockedPlots = new GameObject[0];
     [SerializeField] int baseCost = 100;
+    [SerializeField] int stepCost = 50;
     [SerializeField] string itemName = "ô đất";
     [SerializeField] TMP_Text buttonLabel;
 
     public int UnlockedCount { get; private set; }
     public string ItemName => itemName;
-    public int NextCost => baseCost * (UnlockedCount + 1);
+    public int BaseCost => baseCost;
+    public int StepCost => stepCost;
+    public int LockedCount => lockedPlots == null ? 0 : lockedPlots.Length;
+    public int NextCost => GetCostForIndex(UnlockedCount);
     public bool IsSoldOut => UnlockedCount >= LockedCount;
 
-    int LockedCount => lockedPlots == null ? 0 : lockedPlots.Length;
+    public int GetCostForIndex(int index) => baseCost + index * stepCost;
 
     void Start()
     {
@@ -35,25 +39,41 @@ public class PlotUnlocker : MonoBehaviour
 
     public bool TryBuy()
     {
+        if (lockedPlots == null || lockedPlots.Length == 0)
+        {
+            Debug.LogWarning($"PlotUnlocker '{name}': lockedPlots chưa được gán.", this);
+            Toast.Show($"Chưa cấu hình {itemName} để mua!");
+            return false;
+        }
+
         if (IsSoldOut)
         {
-            Toast.Show($"Đã bán hết {itemName}");
+            Toast.Show($"Đã bán hết {itemName}!");
             return false;
         }
 
-        var target = lockedPlots[UnlockedCount];
+        var gm = GameManager.Instance;
+        if (gm == null) return false;
+
+        int index = Mathf.Clamp(UnlockedCount, 0, lockedPlots.Length - 1);
+        var target = lockedPlots[index];
         if (target == null)
         {
-            Debug.LogWarning($"PlotUnlocker '{name}': lockedPlots[{UnlockedCount}] chua gan object.", this);
+            Toast.Show($"Lỗi dữ liệu {itemName} #{index + 1}!");
             return false;
         }
 
-        if (!GameManager.Instance.TrySpend(NextCost)) return false;
+        int cost = NextCost;
+        if (!gm.TrySpend(cost))
+        {
+            Toast.Show($"Không đủ tiền! Cần {cost}$ (đang có {gm.Money}$)");
+            return false;
+        }
 
         target.SetActive(true);
         UnlockedCount++;
-        Toast.Show($"Đã mua {itemName}!");
-        AudioManager.Instance?.Play("click");
+        Toast.Show($"Đã mua {itemName} #{UnlockedCount} (-{cost}$)");
+        if (AudioManager.Instance != null) AudioManager.Instance.Play("click");
         RefreshLabel();
         return true;
     }
@@ -62,6 +82,15 @@ public class PlotUnlocker : MonoBehaviour
     {
         lockedPlots = plots ?? new GameObject[0];
         UnlockedCount = 0;
+        RefreshLabel();
+    }
+
+    public void Configure(GameObject[] plots, int newBaseCost, int newStepCost, string newItemName)
+    {
+        lockedPlots = plots ?? new GameObject[0];
+        baseCost = newBaseCost;
+        stepCost = newStepCost;
+        itemName = newItemName;
         RefreshLabel();
     }
 
