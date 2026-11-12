@@ -14,7 +14,6 @@ public class InventoryUI : MonoBehaviour
     [SerializeField] TMP_Text infoText;
     [SerializeField] Button closeButton;
     [SerializeField] Button sellOneButton;
-    [SerializeField] Button sellAllButton;
     [SerializeField] int slotCount = 24;
 
     public bool IsPanelOpen
@@ -42,8 +41,6 @@ public class InventoryUI : MonoBehaviour
             closeButton.onClick.AddListener(Close);
         if (sellOneButton != null)
             sellOneButton.onClick.AddListener(OnSellOne);
-        if (sellAllButton != null)
-            sellAllButton.onClick.AddListener(OnSellAll);
     }
 
     void ResolvePanel()
@@ -103,6 +100,10 @@ public class InventoryUI : MonoBehaviour
                 grid.childAlignment = TextAnchor.UpperCenter;
             }
         }
+
+        // Xoá nút "Bán hết" cũ nếu còn tồn tại trong scene
+        var legacySell = panel.transform.Find("SellButton");
+        if (legacySell != null) Destroy(legacySell.gameObject);
 
         EnsureInfoBar();
         EnsureCloseButton();
@@ -190,13 +191,16 @@ public class InventoryUI : MonoBehaviour
                 rt.anchorMin = Vector2.zero;
                 rt.anchorMax = Vector2.one;
                 rt.offsetMin = new Vector2(16, 4);
-                rt.offsetMax = new Vector2(-190, -4);
+                rt.offsetMax = new Vector2(-108, -4);
                 infoText = go.AddComponent<TextMeshProUGUI>();
                 infoText.fontSize = 15;
                 infoText.color = Color.white;
                 infoText.alignment = TextAlignmentOptions.Left;
             }
         }
+
+        var oldSellAll = footGo.transform.Find("SellAllBtn");
+        if (oldSellAll != null) Destroy(oldSellAll.gameObject);
 
         if (sellOneButton == null)
         {
@@ -205,24 +209,10 @@ public class InventoryUI : MonoBehaviour
             else
             {
                 var go = CreateSimpleBtn(footGo.transform, "SellOneBtn", "Bán 1",
-                    new Vector2(1f, 0.5f), new Vector2(-96, 0), new Vector2(82, 34),
+                    new Vector2(1f, 0.5f), new Vector2(-12, 0), new Vector2(88, 34),
                     new Color(0.82f, 0.45f, 0.12f, 0.95f));
                 sellOneButton = go.GetComponent<Button>();
                 sellOneButton.onClick.AddListener(OnSellOne);
-            }
-        }
-
-        if (sellAllButton == null)
-        {
-            var b = footGo.transform.Find("SellAllBtn");
-            if (b != null) sellAllButton = b.GetComponent<Button>();
-            else
-            {
-                var go = CreateSimpleBtn(footGo.transform, "SellAllBtn", "Bán hết",
-                    new Vector2(1f, 0.5f), new Vector2(-8, 0), new Vector2(82, 34),
-                    new Color(0.18f, 0.55f, 0.28f, 0.95f));
-                sellAllButton = go.GetComponent<Button>();
-                sellAllButton.onClick.AddListener(OnSellAll);
             }
         }
     }
@@ -367,7 +357,6 @@ public class InventoryUI : MonoBehaviour
         {
             infoText.text = "<color=#78350F><b>TÚI ĐỒ NÔNG TRẠI</b></color>  —  <color=#CBD5E1>Click chọn vật phẩm để xem hoặc gán phím 1 - 6</color>";
             if (sellOneButton != null) sellOneButton.gameObject.SetActive(false);
-            if (sellAllButton != null) sellAllButton.gameObject.SetActive(false);
             return;
         }
 
@@ -397,17 +386,6 @@ public class InventoryUI : MonoBehaviour
                 if (t != null) t.text = $"Bán 1 (+{price}$)";
             }
         }
-
-        if (sellAllButton != null)
-        {
-            sellAllButton.gameObject.SetActive(isHarvest);
-            if (isHarvest)
-            {
-                int totalPrice = gm.GetSellPrice(SelectedItem.crop) * SelectedItem.count;
-                var t = sellAllButton.GetComponentInChildren<TMP_Text>();
-                if (t != null) t.text = $"Bán hết (+{totalPrice}$)";
-            }
-        }
     }
 
     void OnSellOne()
@@ -418,15 +396,6 @@ public class InventoryUI : MonoBehaviour
         int left = GameManager.Instance.Count(crop);
         if (left > 0) SelectedItem.count = left;
         else ClearSelection();
-    }
-
-    void OnSellAll()
-    {
-        if (SelectedItem == null || SelectedItem.crop == null || GameManager.Instance == null) return;
-        var crop = SelectedItem.crop;
-        int count = GameManager.Instance.Count(crop);
-        GameManager.Instance.SellAmount(crop, count);
-        ClearSelection();
     }
 
     public void Refresh()

@@ -16,7 +16,7 @@ MonoBehaviour:
   seedPrice: 0
   sellPrice: 10
   growTime: 0
-  icon: {fileID: -6977131504767820746, guid: 269db1622c335d94b990d27e1848570e, type: 3}
+  icon: {fileID: -5094075432592294927, guid: 3f52e4890af41274bbe0fc92db10f78d, type: 3}
   growthSprites: []
   hasBestSeason: 0
   bestSeason: 0

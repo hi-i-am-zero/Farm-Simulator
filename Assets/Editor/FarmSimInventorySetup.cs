@@ -238,24 +238,17 @@ public static class FarmSimInventorySetup
             Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
             TextAlignmentOptions.Left);
         infoText.rectTransform.offsetMin = new Vector2(16, 4);
-        infoText.rectTransform.offsetMax = new Vector2(-190, -4);
+        infoText.rectTransform.offsetMax = new Vector2(-108, -4);
         infoText.fontSize = 15;
         infoText.color = Color.white;
         infoText.raycastTarget = false;
 
         var sellOneBtn = CreateButton(footer.transform, "SellOneBtn", "Bán 1",
-            new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-96, 0), new Vector2(82, 34));
+            new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-12, 0), new Vector2(88, 34));
         sellOneBtn.GetComponent<Image>().color = new Color(0.82f, 0.45f, 0.12f, 0.95f);
         var sellOneTmp = sellOneBtn.GetComponentInChildren<TMP_Text>();
         if (sellOneTmp != null) sellOneTmp.fontSize = 14;
         sellOneBtn.SetActive(false);
-
-        var sellAllBtn = CreateButton(footer.transform, "SellAllBtn", "Bán hết",
-            new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-8, 0), new Vector2(82, 34));
-        sellAllBtn.GetComponent<Image>().color = new Color(0.18f, 0.55f, 0.28f, 0.95f);
-        var sellAllTmp = sellAllBtn.GetComponentInChildren<TMP_Text>();
-        if (sellAllTmp != null) sellAllTmp.fontSize = 14;
-        sellAllBtn.SetActive(false);
 
         panel.SetActive(false);
 
@@ -270,7 +263,6 @@ public static class FarmSimInventorySetup
         uiSo.FindProperty("infoText").objectReferenceValue = infoText;
         uiSo.FindProperty("closeButton").objectReferenceValue = closeBtn.GetComponent<Button>();
         uiSo.FindProperty("sellOneButton").objectReferenceValue = sellOneBtn.GetComponent<Button>();
-        uiSo.FindProperty("sellAllButton").objectReferenceValue = sellAllBtn.GetComponent<Button>();
         uiSo.FindProperty("slotCount").intValue = 24;
         uiSo.ApplyModifiedPropertiesWithoutUndo();
 

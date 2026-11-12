@@ -10,6 +10,7 @@ public class AnimalProduce : MonoBehaviour, IConditionalInteractable, IGrowable
     [SerializeField] CropData productItem;
     [SerializeField] float produceInterval = 30f;
     [SerializeField] float elapsed;
+    [SerializeField] ToolType requiredTool = ToolType.Hand;
 
     static readonly Vector3 AlertBaseLocalPos = new(0f, 0.72f, 0f);
 
@@ -23,12 +24,13 @@ public class AnimalProduce : MonoBehaviour, IConditionalInteractable, IGrowable
     public bool CanInteract => IsReady;
 
     /// <summary>
-    /// Assigns the product item and production cycle duration for this animal.
+    /// Assigns the product item, production cycle duration, and required harvest tool for this animal.
     /// </summary>
-    public void Configure(CropData item, float interval = 30f)
+    public void Configure(CropData item, float interval = 30f, ToolType tool = ToolType.Hand)
     {
         productItem = item;
         produceInterval = Mathf.Max(1f, interval);
+        requiredTool = tool;
         elapsed = Mathf.Clamp(elapsed, 0f, produceInterval);
         if (Application.isPlaying && gameObject.activeInHierarchy)
             UpdateAlertVisual();
@@ -86,11 +88,17 @@ public class AnimalProduce : MonoBehaviour, IConditionalInteractable, IGrowable
     }
 
     /// <summary>
-    /// Harvests the animal's yield into the player's inventory if ready, then restarts the timer.
+    /// Harvests the animal's yield into the player's inventory if ready and holding the required tool.
     /// </summary>
     public void Interact()
     {
         if (!IsReady || productItem == null) return;
+
+        if (!IsHoldingRequiredTool())
+        {
+            Toast.Show($"Hãy cầm {GetRequiredToolLabel()} lên để thu hoạch {productItem.cropName}!");
+            return;
+        }
 
         int bagCount = 0;
         if (GameManager.Instance != null)
@@ -108,6 +116,20 @@ public class AnimalProduce : MonoBehaviour, IConditionalInteractable, IGrowable
         elapsed = 0f;
         UpdateAlertVisual();
     }
+
+    bool IsHoldingRequiredTool()
+    {
+        if (requiredTool == ToolType.Hand) return true;
+        var gm = GameManager.Instance;
+        return gm != null && gm.SelectedTool != null && gm.SelectedTool.type == requiredTool;
+    }
+
+    string GetRequiredToolLabel() => requiredTool switch
+    {
+        ToolType.Bucket => "Xô",
+        ToolType.Sickle => "Liềm",
+        _ => "công cụ"
+    };
 
     void EnsureAlert()
     {

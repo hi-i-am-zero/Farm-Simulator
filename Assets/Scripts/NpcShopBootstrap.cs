@@ -14,30 +14,18 @@ public class NpcShopBootstrap : MonoBehaviour
 {
     readonly struct AnimalPenSpec
     {
-        public readonly string TypeName;
-        public readonly string ItemName;
-        public readonly string ShopName;
-        public readonly string LegacyTriggerName;
-        public readonly int BaseCost;
-        public readonly int StepCost;
-        public readonly Vector2 SpawnMin;
-        public readonly Vector2 SpawnMax;
-        public readonly Vector2 BoundsMax;
-        public readonly Vector3 GatePos;
-        public readonly string NpcTilemapName;
-        public readonly string NpcTriggerName;
-        public readonly Vector3 NpcFallbackPos;
-        public readonly string NpcTitle;
-        public readonly string NpcGreeting;
-        public readonly string NpcBadge;
+        public readonly string TypeName, ItemName, ShopName, LegacyTriggerName;
+        public readonly int BaseCost, StepCost;
+        public readonly Vector2 SpawnMin, SpawnMax, BoundsMax, SampleMin, SampleMax;
+        public readonly Vector3 GatePos, NpcFallbackPos;
+        public readonly string NpcTilemapName, NpcTriggerName, NpcTitle, NpcGreeting, NpcBadge;
         public readonly string[] ProductAliases;
         public readonly Vector3[] SamplePositions;
-        public readonly Vector2 SampleMin;
-        public readonly Vector2 SampleMax;
+        public readonly ToolType HarvestTool;
 
         public AnimalPenSpec(
             string typeName, string itemName, string shopName, string legacyTriggerName,
-            int baseCost, int stepCost,
+            int baseCost, int stepCost, ToolType harvestTool,
             Vector2 spawnMin, Vector2 spawnMax, Vector2 boundsMax, Vector3 gatePos,
             string npcTilemapName, string npcTriggerName, Vector3 npcFallbackPos,
             string npcTitle, string npcGreeting, string npcBadge,
@@ -50,6 +38,7 @@ public class NpcShopBootstrap : MonoBehaviour
             LegacyTriggerName = legacyTriggerName;
             BaseCost = baseCost;
             StepCost = stepCost;
+            HarvestTool = harvestTool;
             SpawnMin = spawnMin;
             SpawnMax = spawnMax;
             BoundsMax = boundsMax;
@@ -71,12 +60,12 @@ public class NpcShopBootstrap : MonoBehaviour
     {
         new AnimalPenSpec(
             typeName: "Sheep", itemName: "Cừu", shopName: "SheepShop", legacyTriggerName: "NpcShop_TileSheep",
-            baseCost: 50, stepCost: 30,
+            baseCost: 50, stepCost: 30, harvestTool: ToolType.Sickle,
             spawnMin: new Vector2(-19.5f, 5.5f), spawnMax: new Vector2(-15.5f, 7.5f), boundsMax: new Vector2(-15.5f, 7.5f),
             gatePos: new Vector3(-17.5f, 4.5f, 0f),
             npcTilemapName: "NpcSheep", npcTriggerName: "NpcShop_Sheep", npcFallbackPos: new Vector3(1.5f, -23.5f, 0f),
             npcTitle: "Trang Trại Cừu",
-            npcGreeting: "Chào bạn! Tôi bán cừu lấy lông (tối đa 10 con) và thu mua lông cừu tươi.",
+            npcGreeting: "Chào bạn! Tôi bán cừu, liềm cắt lông và thu mua lông cừu tươi.",
             npcBadge: "[E] Cửa Hàng Cừu",
             productAliases: new[] { "Lông cừu" },
             samplePositions: new[]
@@ -88,7 +77,7 @@ public class NpcShopBootstrap : MonoBehaviour
         ),
         new AnimalPenSpec(
             typeName: "Chicken", itemName: "Gà", shopName: "ChickenShop", legacyTriggerName: "NpcShop_TileChick",
-            baseCost: 20, stepCost: 20,
+            baseCost: 20, stepCost: 20, harvestTool: ToolType.Hand,
             spawnMin: new Vector2(-6.5f, 13.5f), spawnMax: new Vector2(-3.5f, 14.5f), boundsMax: new Vector2(-3.5f, 14.5f),
             gatePos: new Vector3(-5.5f, 12.5f, 0f),
             npcTilemapName: "NpcChick", npcTriggerName: "NpcShop_Chick", npcFallbackPos: new Vector3(6.5f, -14.5f, 0f),
@@ -105,12 +94,12 @@ public class NpcShopBootstrap : MonoBehaviour
         ),
         new AnimalPenSpec(
             typeName: "Cow", itemName: "Bò", shopName: "CowShop", legacyTriggerName: "NpcShop_TileCow",
-            baseCost: 100, stepCost: 50,
+            baseCost: 100, stepCost: 50, harvestTool: ToolType.Bucket,
             spawnMin: new Vector2(4.5f, 13.5f), spawnMax: new Vector2(9.5f, 14.5f), boundsMax: new Vector2(9.5f, 15.5f),
             gatePos: new Vector3(5.5f, 12.5f, 0f),
             npcTilemapName: "NpcCow", npcTriggerName: "NpcShop_Cow", npcFallbackPos: new Vector3(-6.5f, -25.5f, 0f),
             npcTitle: "Trang Trại Bò",
-            npcGreeting: "Chào bạn! Tôi cung cấp bò sữa (tối đa 10 con) và thu mua sữa bò nguyên chất.",
+            npcGreeting: "Chào bạn! Tôi bán bò sữa, xô vắt sữa và thu mua sữa bò nguyên chất.",
             npcBadge: "[E] Cửa Hàng Bò",
             productAliases: new[] { "Sữa bò" },
             samplePositions: new[]
@@ -152,11 +141,19 @@ public class NpcShopBootstrap : MonoBehaviour
             var animals = EnsureAnimalsInPen(pen, prefab, 10, product);
             var unlocker = EnsureUnlocker(pen.ShopName, animals, pen.BaseCost, pen.StepCost, pen.ItemName);
 
+            var shopOffers = new List<ShopOffer>();
+            if (pen.HarvestTool != ToolType.Hand)
+            {
+                var requiredTool = FindTool(pen.HarvestTool);
+                if (requiredTool != null) shopOffers.Add(ToolOffer(requiredTool));
+            }
+            shopOffers.Add(AnimalOffer(unlocker));
+
             var sellCrops = product != null ? new[] { product } : new CropData[0];
             AttachOrCreateTilemapNpc(
                 pen.NpcTilemapName, pen.NpcTriggerName, pen.NpcFallbackPos,
                 pen.NpcTitle, pen.NpcGreeting, pen.NpcBadge,
-                new[] { AnimalOffer(unlocker) }, sellCrops
+                shopOffers.ToArray(), sellCrops
             );
 
             EnsureSampleAnimalsInPen(pen, prefab);
@@ -217,21 +214,17 @@ public class NpcShopBootstrap : MonoBehaviour
             if (t != null) return t;
         }
 
-        var tb = FindAnyObjectByType<ToolsToolbar>(FindObjectsInactive.Include);
-        if (tb != null && tb.Tools != null)
-        {
-            foreach (var t in tb.Tools)
-            {
-                if (t != null && t.type == type) return t;
-            }
-        }
-
 #if UNITY_EDITOR
-        string fileName = type == ToolType.Hoe ? "Hoe" : type == ToolType.WateringCan ? "WateringCan" : "";
-        if (!string.IsNullOrEmpty(fileName))
+        string fileName = type switch
         {
+            ToolType.Hoe => "Hoe",
+            ToolType.WateringCan => "WateringCan",
+            ToolType.Bucket => "Bucket",
+            ToolType.Sickle => "Sickle",
+            _ => ""
+        };
+        if (!string.IsNullOrEmpty(fileName))
             return UnityEditor.AssetDatabase.LoadAssetAtPath<ToolData>($"Assets/Data/Tools/{fileName}.asset");
-        }
 #endif
         return null;
     }
@@ -261,7 +254,7 @@ public class NpcShopBootstrap : MonoBehaviour
             // Tắt trước khi gắn AnimalProduce để chờ mua trong Shop (tránh khởi tạo TMP khi đang tắt)
             animalGo.SetActive(false);
             ApplyPenBounds(animalGo, pen.SpawnMin, pen.BoundsMax);
-            SetupBoughtAnimalProduce(animalGo, productItem, 30f);
+            SetupBoughtAnimalProduce(animalGo, productItem, 30f, pen.HarvestTool);
             list.Add(animalGo);
         }
 
@@ -364,9 +357,9 @@ public class NpcShopBootstrap : MonoBehaviour
     }
 
     /// <summary>
-    /// Cấu hình vật nuôi của người chơi để sinh sản lượng theo chu kỳ 30 giây (không dùng cơ chế cho ăn cũ).
+    /// Cấu hình vật nuôi của người chơi để sinh sản lượng theo chu kỳ 30 giây và kiểm tra công cụ thu hoạch.
     /// </summary>
-    public static void SetupBoughtAnimalProduce(GameObject go, CropData productItem, float produceInterval = 30f)
+    public static void SetupBoughtAnimalProduce(GameObject go, CropData productItem, float produceInterval = 30f, ToolType requiredTool = ToolType.Hand)
     {
         if (go == null) return;
 
@@ -376,7 +369,7 @@ public class NpcShopBootstrap : MonoBehaviour
         var produce = go.GetComponent<AnimalProduce>();
         if (produce == null) produce = go.AddComponent<AnimalProduce>();
         CropData resolvedItem = productItem != null ? productItem : produce.ProductItem;
-        produce.Configure(resolvedItem, produceInterval);
+        produce.Configure(resolvedItem, produceInterval, requiredTool);
     }
 
     /// <summary>

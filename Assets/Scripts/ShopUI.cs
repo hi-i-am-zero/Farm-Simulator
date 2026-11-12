@@ -260,7 +260,10 @@ public class ShopUI : MonoBehaviour
             CreateIcon(row.transform, tool.icon, new Vector2(38, 38));
 
         string priceHex = (!isOwned && !canAfford) ? "#F87171" : "#FFD700";
-        string desc = $"<b>{tool.displayName}</b>  -  Giá: <color={priceHex}><b>{tool.price}$</b></color>\n<size=17><color=#CBD5E1>Công cụ làm nông (Chỉ mua 1 lần)</color></size>";
+        string roleText = (tool.type == ToolType.Bucket || tool.type == ToolType.Sickle)
+            ? "Công cụ thu hoạch (Chỉ mua 1 lần)"
+            : "Công cụ làm nông (Chỉ mua 1 lần)";
+        string desc = $"<b>{tool.displayName}</b>  -  Giá: <color={priceHex}><b>{tool.price}$</b></color>\n<size=17><color=#CBD5E1>{roleText}</color></size>";
         CreateText(row.transform, desc, 20, TextAlignmentOptions.Left, new Vector2(260, 48));
 
         if (isOwned)

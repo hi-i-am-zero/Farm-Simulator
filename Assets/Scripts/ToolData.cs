@@ -5,7 +5,9 @@ public enum ToolType
     Hoe,
     WateringCan,
     Seed,
-    Hand
+    Hand,
+    Bucket,
+    Sickle
 }
 
 [CreateAssetMenu(menuName = "Farm/Tool")]
