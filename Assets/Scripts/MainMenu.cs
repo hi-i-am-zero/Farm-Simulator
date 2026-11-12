@@ -136,7 +136,11 @@ public class MainMenu : MonoBehaviour
         }
     }
 
-    public void Continue() => SceneManager.LoadScene(gameScene);
+    public void Continue()
+    {
+        ControlsGuide.Pending = !SaveSystem.Exists;
+        SceneManager.LoadScene(gameScene);
+    }
 
     public void OnNewGameClicked()
     {
@@ -161,6 +165,7 @@ public class MainMenu : MonoBehaviour
     {
         HideConfirm();
         SaveSystem.Delete();
+        ControlsGuide.Pending = true;
         SceneManager.LoadScene(gameScene);
     }
 

@@ -17,6 +17,7 @@ public class PanelToggle : MonoBehaviour
 
     void Update()
     {
+        if (ControlsGuide.IsOpen) return;
         if (key != KeyCode.None && Input.GetKeyDown(key))
             Toggle();
     }

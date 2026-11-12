@@ -146,6 +146,7 @@ public class SaveManager : MonoBehaviour
         CancelInvoke(nameof(Save));
         SaveSystem.Delete();
         Time.timeScale = 1f;
+        ControlsGuide.Pending = true;
         var scene = SceneManager.GetActiveScene();
         if (scene.buildIndex >= 0)
             SceneManager.LoadScene(scene.buildIndex);

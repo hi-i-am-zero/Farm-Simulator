@@ -22,7 +22,8 @@ public class PauseMenu : MonoBehaviour
 
     void Start()
     {
-        Time.timeScale = 1f;
+        if (!ControlsGuide.Pending && !ControlsGuide.IsOpen)
+            Time.timeScale = 1f;
         if (panel != null) panel.SetActive(false);
         SetupPauseUi();
         HideConfirm();
@@ -32,6 +33,7 @@ public class PauseMenu : MonoBehaviour
     {
         // Dang noi chuyen NPC: Esc chi dong shop, khong mo Pause
         if (ShopUI.IsOpen) return;
+        if (ControlsGuide.IsOpen) return;
         if (Input.GetKeyDown(KeyCode.Escape)) Toggle();
     }
 
@@ -86,6 +88,7 @@ public class PauseMenu : MonoBehaviour
         HideConfirm();
         Time.timeScale = 1f;
         IsPaused = false;
+        ControlsGuide.Pending = true;
         if (saveManager != null)
             saveManager.ResetSave();
         else
