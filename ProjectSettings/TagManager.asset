@@ -44,11 +44,11 @@ TagManager:
   - name: Background
     uniqueID: 1001
     locked: 0
-  - name: Plots
-    uniqueID: 1002
-    locked: 0
   - name: Field
     uniqueID: 3907541117
+    locked: 0
+  - name: Plots
+    uniqueID: 1002
     locked: 0
   - name: Crops
     uniqueID: 1003

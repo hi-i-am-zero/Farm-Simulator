@@ -12,11 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 514611b31133cda4fb9af95e80d92a9f, type: 3}
   m_Name: Rice
   m_EditorClassIdentifier: Assembly-CSharp::CropData
-  cropName: "L\u00FAa"
+  cropName: "L\xFAa"
   seedPrice: 5
   sellPrice: 8
   growTime: 8
-  icon: {fileID: 0}
-  growthSprites: []
+  icon: {fileID: 404897883756998166, guid: 5bd3ec862ef38ea4d9e1c6a1c6194811, type: 3}
+  seedIcon: {fileID: -1728379928979949314, guid: c64fc410d3a73a44aa01aa061fbc1a14, type: 3}
+  growthSprites:
+  - {fileID: -8552771937101445899, guid: cf8b218dc283eb24abdcb8d0dbb0cef1, type: 3}
+  - {fileID: 5458929748159511102, guid: fa471682e8c949f47b9a564f537da151, type: 3}
+  - {fileID: 6279054037598063169, guid: 423958b88809aca43beaa5e29f92676c, type: 3}
   hasBestSeason: 1
   bestSeason: 0

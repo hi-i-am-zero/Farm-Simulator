@@ -12,11 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 514611b31133cda4fb9af95e80d92a9f, type: 3}
   m_Name: Corn
   m_EditorClassIdentifier: Assembly-CSharp::CropData
-  cropName: "Ng\u00F4"
+  cropName: "Ng\xF4"
   seedPrice: 15
   sellPrice: 23
   growTime: 15
-  icon: {fileID: -298017716872398204, guid: 3f52e4890af41274bbe0fc92db10f78d, type: 3}
-  growthSprites: []
+  icon: {fileID: 5670179219244248295, guid: fb9737ef1df422444ae2602ff4e81416, type: 3}
+  seedIcon: {fileID: 6732241840911282310, guid: c79d666d5eebb854882e788de51b9aba, type: 3}
+  growthSprites:
+  - {fileID: -7809379378297968640, guid: 6130f39778406e3499d7b49bc5863224, type: 3}
+  - {fileID: 5949753550685658098, guid: c349fa3a11c5d8e4cbd717591eba23dd, type: 3}
+  - {fileID: -2831635263744943669, guid: 3ba09bbc17cd19040ae37446f61b41a6, type: 3}
   hasBestSeason: 1
   bestSeason: 1

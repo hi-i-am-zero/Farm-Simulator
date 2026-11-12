@@ -12,14 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 514611b31133cda4fb9af95e80d92a9f, type: 3}
   m_Name: Pumpkin
   m_EditorClassIdentifier: Assembly-CSharp::CropData
-  cropName: "B\xED ng\xF4"
+  cropName: "B\u1EAFp C\u1EA3i"
   seedPrice: 60
   sellPrice: 190
   growTime: 60
-  icon: {fileID: 5731981955572824522, guid: df527b455ca75404da0886da40540d7a, type: 3}
+  icon: {fileID: -6615754364058474049, guid: e093cbbcd14efc04585ffe8ed6df11a3, type: 3}
+  seedIcon: {fileID: -8163747045816357467, guid: 153528dbd77215549ab576182a99a6ea, type: 3}
   growthSprites:
-  - {fileID: -4409446715219994729, guid: c067f364f4a071b418d2cbf5b38c905a, type: 3}
-  - {fileID: 5731981955572824522, guid: df527b455ca75404da0886da40540d7a, type: 3}
-  - {fileID: 8724667134466148687, guid: 439f35e362450d74db866163082281d9, type: 3}
+  - {fileID: -3009659751897613197, guid: ae56f8354e5d2f840bb5c16389d6e9f1, type: 3}
+  - {fileID: 2823216415284645959, guid: a34244ea87806f043a226f6dd0940528, type: 3}
+  - {fileID: -6259062194163625062, guid: 5550572b2e9cf8a4793ae0a0d0ae45b0, type: 3}
   hasBestSeason: 1
   bestSeason: 2

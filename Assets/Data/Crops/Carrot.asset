@@ -16,10 +16,11 @@ MonoBehaviour:
   seedPrice: 10
   sellPrice: 15
   growTime: 10
-  icon: {fileID: 6279054037598063169, guid: 423958b88809aca43beaa5e29f92676c, type: 3}
+  icon: {fileID: -9191263657056127176, guid: 6ec4ed8b069630c44b4da2acf17b2efc, type: 3}
+  seedIcon: {fileID: -3655909530771561230, guid: 6048df52932289f44af76e6f1089f5b9, type: 3}
   growthSprites:
-  - {fileID: -558852649991698011, guid: 8550cd14d97c942469c9696e26f4b6f6, type: 3}
-  - {fileID: 843629608526838009, guid: b43fcd2b8b986fa4bbd84c1d68493c86, type: 3}
-  - {fileID: 6279054037598063169, guid: 423958b88809aca43beaa5e29f92676c, type: 3}
+  - {fileID: 1908699424671483105, guid: d25b312e93c400648a7834309feac22c, type: 3}
+  - {fileID: -5067751389849610160, guid: be5d9d2c0115ccc47932e1eb5684b324, type: 3}
+  - {fileID: -3538523377408153532, guid: 7b76c21d6c6bd764a978651b390369d9, type: 3}
   hasBestSeason: 1
   bestSeason: 0

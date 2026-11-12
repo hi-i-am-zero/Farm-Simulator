@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ToolData
   displayName: "Cu\u1ED1c"
   type: 0
-  icon: {fileID: -2663283879771305436, guid: 11922b5df6b97d345ae03a952f93995c, type: 3}
-  price: 15
+  icon: {fileID: 9093361847857877592, guid: 72a52187478f007419436abdedd6dcca, type: 3}
+  price: 20

@@ -10,6 +10,14 @@ public class Plot : MonoBehaviour, IInteractable, IGrowable
     [SerializeField] SpriteRenderer cropRenderer;
     [SerializeField] SpriteRenderer soilRenderer;
 
+    [Header("Sprites Theo Từng Trạng Thái Đất")]
+    [Tooltip("Sprite 1: Đất trống chưa cuốc")]
+    [SerializeField] Sprite untilledSprite;
+    [Tooltip("Sprite 2: Đất đã cuốc")]
+    [SerializeField] Sprite tilledSprite;
+    [Tooltip("Sprite 3: Đất đã tưới nước")]
+    [SerializeField] Sprite wateredSprite;
+
     public CropData Crop { get; private set; }
     public long PlantedTicks { get; private set; }
     public bool IsTilled { get; private set; }
@@ -27,6 +35,8 @@ public class Plot : MonoBehaviour, IInteractable, IGrowable
     {
         if (soilRenderer == null)
             soilRenderer = GetComponent<SpriteRenderer>();
+        if (untilledSprite == null && soilRenderer != null && soilRenderer.sprite != null)
+            untilledSprite = soilRenderer.sprite;
         UpdateSoilVisual();
     }
 
@@ -42,27 +52,37 @@ public class Plot : MonoBehaviour, IInteractable, IGrowable
             return;
         }
 
-        var tool = GameManager.Instance != null ? GameManager.Instance.SelectedTool : null;
-        if (tool == null)
+        var gm = GameManager.Instance;
+        var activeItem = gm != null ? gm.GetActiveHotbarItem() : null;
+
+        if (activeItem == null || activeItem.IsEmpty)
         {
-            Toast.Show("Hãy mua công cụ ở thanh dưới");
+            UseHand();
             return;
         }
 
-        switch (tool.type)
+        if (activeItem.kind == ItemKind.Tool && activeItem.tool != null)
         {
-            case ToolType.Hoe:
-                Till();
-                break;
-            case ToolType.WateringCan:
-                Water();
-                break;
-            case ToolType.Seed:
-                Plant();
-                break;
-            default:
-                UseHand();
-                break;
+            switch (activeItem.tool.type)
+            {
+                case ToolType.Hoe:
+                    Till();
+                    break;
+                case ToolType.WateringCan:
+                    Water();
+                    break;
+                default:
+                    UseHand();
+                    break;
+            }
+        }
+        else if (activeItem.kind == ItemKind.Seed && activeItem.crop != null)
+        {
+            Plant(activeItem.crop);
+        }
+        else
+        {
+            UseHand();
         }
     }
 
@@ -114,7 +134,7 @@ public class Plot : MonoBehaviour, IInteractable, IGrowable
         AudioManager.Instance?.Play("plant");
     }
 
-    void Plant()
+    public void Plant(CropData cropToPlant = null)
     {
         if (!IsTilled)
         {
@@ -129,19 +149,29 @@ public class Plot : MonoBehaviour, IInteractable, IGrowable
         }
 
         var gm = GameManager.Instance;
-        gm.EnsureSelectedSeed();
-        if (gm.SelectedCrop == null || gm.SeedCount(gm.SelectedCrop) <= 0)
+        if (cropToPlant == null)
         {
-            Toast.Show("Hãy mua hạt ở NPC trồng cây");
+            var active = gm != null ? gm.GetActiveHotbarItem() : null;
+            if (active != null && active.kind == ItemKind.Seed)
+                cropToPlant = active.crop;
+            else if (gm != null)
+                cropToPlant = gm.SelectedCrop;
+        }
+
+        if (cropToPlant == null || gm == null || gm.SeedCount(cropToPlant) <= 0)
+        {
+            Toast.Show("Hãy mua hạt ở NPC trồng cây hoặc chọn hạt từ túi đồ");
             return;
         }
-        if (!gm.TryConsumeSeed(gm.SelectedCrop)) return;
-        SetCrop(gm.SelectedCrop, DateTime.UtcNow.Ticks);
+
+        if (!gm.TryConsumeSeed(cropToPlant)) return;
+        SetCrop(cropToPlant, DateTime.UtcNow.Ticks);
 
         // Tuoi san truoc khi trong van duoc huong bonus
         if (IsWatered)
             AddGrowth(Crop.growTime * 0.4f);
 
+        Toast.Show($"Đã gieo {cropToPlant.cropName} (Còn: {gm.SeedCount(cropToPlant)})");
         AudioManager.Instance?.Play("plant");
     }
 
@@ -149,7 +179,7 @@ public class Plot : MonoBehaviour, IInteractable, IGrowable
     {
         if (Crop == null)
         {
-            Toast.Show(IsTilled ? "Mua hạt ở NPC rồi chọn tool Hạt" : "Chọn cuốc để làm đất");
+            Toast.Show(IsTilled ? "Cầm Hạt giống để gieo cây" : "Cầm Cuốc để cuốc đất (mua ở NPC nông sản)");
             return;
         }
 
@@ -229,10 +259,40 @@ public class Plot : MonoBehaviour, IInteractable, IGrowable
         if (soilRenderer == null) return;
 
         if (IsWatered)
-            soilRenderer.color = WateredTint;
+        {
+            if (wateredSprite != null)
+            {
+                soilRenderer.sprite = wateredSprite;
+                soilRenderer.color = Color.white;
+            }
+            else
+            {
+                soilRenderer.color = WateredTint;
+            }
+        }
         else if (IsTilled)
-            soilRenderer.color = TilledTint;
+        {
+            if (tilledSprite != null)
+            {
+                soilRenderer.sprite = tilledSprite;
+                soilRenderer.color = Color.white;
+            }
+            else
+            {
+                soilRenderer.color = TilledTint;
+            }
+        }
         else
-            soilRenderer.color = UntilledTint;
+        {
+            if (untilledSprite != null)
+            {
+                soilRenderer.sprite = untilledSprite;
+                soilRenderer.color = Color.white;
+            }
+            else
+            {
+                soilRenderer.color = UntilledTint;
+            }
+        }
     }
 }

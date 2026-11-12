@@ -12,14 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 514611b31133cda4fb9af95e80d92a9f, type: 3}
   m_Name: Tomato
   m_EditorClassIdentifier: Assembly-CSharp::CropData
-  cropName: "C\xE0 chua"
+  cropName: "C\xE0 r\u1ED1t"
   seedPrice: 20
   sellPrice: 30
   growTime: 25
-  icon: {fileID: -1844213531876117813, guid: c352ba1e6216a014c812f74b1b09bb56, type: 3}
+  icon: {fileID: 4145867705145679658, guid: 50f2012a0402ee3459d481202709ae4e, type: 3}
+  seedIcon: {fileID: -210744323198487463, guid: 8f57f41c3fc9a5346959183e913876fc, type: 3}
   growthSprites:
-  - {fileID: -5454188878937622727, guid: 0fec87c858e2b5b48a2a34f859741383, type: 3}
-  - {fileID: -4136700708010962521, guid: 543b6feb5b07d8341aef70135341a90a, type: 3}
-  - {fileID: -1844213531876117813, guid: c352ba1e6216a014c812f74b1b09bb56, type: 3}
+  - {fileID: 6529839130836981542, guid: e339c3b830a80314db4ed110fa432fc6, type: 3}
+  - {fileID: 3277683768694908898, guid: b5663fb4eca2ec449861809ad1e721d1, type: 3}
+  - {fileID: 8511499773088029691, guid: 53238502a1eb77f44ab199f6500e9e44, type: 3}
   hasBestSeason: 1
   bestSeason: 1

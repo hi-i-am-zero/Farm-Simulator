@@ -81,10 +81,10 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 1002
-  m_SortingLayer: 2
+  m_SortingLayer: 3
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -5000103570061886301, guid: 46f43d730bdc1da4a93637c3bc20bcd8, type: 3}
+  m_Sprite: {fileID: -8393169711176511969, guid: 611122a0b1a244848a8a6e79b631c637, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -155,6 +155,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Plot
   cropRenderer: {fileID: 7701828146713800242}
   soilRenderer: {fileID: 4243489108659611832}
+  untilledSprite: {fileID: -8393169711176511969, guid: 611122a0b1a244848a8a6e79b631c637, type: 3}
+  tilledSprite: {fileID: 7422720360937618243, guid: 281adabdef5b1f141b2b3b39fa8885ab, type: 3}
+  wateredSprite: {fileID: -3514117587828241356, guid: f06639883a8df1346a986d9e56ca3cf3, type: 3}
 --- !u!1 &6491451355762714124
 GameObject:
   m_ObjectHideFlags: 0

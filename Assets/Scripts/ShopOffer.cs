@@ -5,11 +5,13 @@ using UnityEngine;
 /// Loại mặt hàng bán trong cửa hàng:
 /// - Animal: Mua thêm vật nuôi (Gà, Bò, Cừu) vào chuồng.
 /// - Seed: Mua hạt giống cây trồng vào túi đồ.
+/// - Tool: Mua công cụ làm nông (chỉ mua 1 lần).
 /// </summary>
 public enum ShopOfferKind
 {
     Animal,
-    Seed
+    Seed,
+    Tool
 }
 
 /// <summary>
@@ -21,7 +23,7 @@ public class ShopOffer
     [Tooltip("Nhãn hiển thị tuỳ chọn nếu muốn ghi đè")]
     public string label = "Mua";
 
-    [Tooltip("Loại mặt hàng: Động vật hoặc Hạt giống")]
+    [Tooltip("Loại mặt hàng: Động vật, Hạt giống hoặc Công cụ")]
     public ShopOfferKind kind = ShopOfferKind.Animal;
 
     [Tooltip("Dùng khi bán Động vật (kết nối tới PlotUnlocker của con vật tương ứng)")]
@@ -29,4 +31,7 @@ public class ShopOffer
 
     [Tooltip("Dùng khi bán Hạt giống (kết nối tới CropData của loại cây)")]
     public CropData seedCrop;
+
+    [Tooltip("Dùng khi bán Công cụ (kết nối tới ToolData của công cụ)")]
+    public ToolData toolData;
 }

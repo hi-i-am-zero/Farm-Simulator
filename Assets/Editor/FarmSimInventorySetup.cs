@@ -9,7 +9,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// Inventory panel kieu 2: thanh day man hinh, khung go, luoi o vuong.
+/// Inventory panel kieu centered popup: khung go dep, ro rang, khong bi che toolbar.
 /// Menu: FarmSim → Tao Inventory Panel
 /// </summary>
 public static class FarmSimInventorySetup
@@ -19,12 +19,12 @@ public static class FarmSimInventorySetup
     const string MainMenuFlag = "Assets/Editor/RUN_MAINMENU_SETUP.flag";
     const string SlotPrefabPath = "Assets/Prefabs/InventorySlot.prefab";
 
-    static readonly Color WoodOuter = new(0.55f, 0.32f, 0.14f, 0.98f);
-    static readonly Color WoodInner = new(0.78f, 0.55f, 0.28f, 1f);
-    static readonly Color Cream = new(0.93f, 0.86f, 0.70f, 1f);
-    static readonly Color SlotEmpty = new(0.86f, 0.78f, 0.62f, 1f);
-    static readonly Color SlotFilled = new(0.93f, 0.86f, 0.70f, 1f);
-    static readonly Color SellBtn = new(0.72f, 0.42f, 0.18f, 0.95f);
+    static readonly Color WoodOuter = new(0.24f, 0.16f, 0.10f, 0.98f);
+    static readonly Color WoodInner = new(0.55f, 0.38f, 0.22f, 1f);
+    static readonly Color Cream = new(0.96f, 0.93f, 0.85f, 1f);
+    static readonly Color SlotEmpty = new(0.85f, 0.80f, 0.72f, 0.45f);
+    static readonly Color SlotFilled = new(0.96f, 0.92f, 0.84f, 1f);
+    static readonly Color SlotSelected = new(1.0f, 0.88f, 0.35f, 1f);
 
     [InitializeOnLoadMethod]
     static void AutoRunIfFlagged()
@@ -69,16 +69,15 @@ public static class FarmSimInventorySetup
             if (!File.Exists(AutoFlag)) return;
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
             try { File.Delete(AutoFlag); } catch { /* ignore */ }
-            Debug.Log("[FarmSim] Auto inventory setup (style 2)...");
+            Debug.Log("[FarmSim] Auto inventory setup (style popup)...");
             try
             {
                 Execute();
-                EditorUtility.DisplayDialog("FarmSim", "Da tao Inventory kieu thanh day (phim I).", "OK");
+                Debug.Log("[FarmSim] Da tao Inventory kieu popup giua man hinh (phim I).");
             }
             catch (System.Exception ex)
             {
                 Debug.LogError("[FarmSim] Inventory setup loi: " + ex);
-                EditorUtility.DisplayDialog("FarmSim loi", ex.Message, "OK");
             }
         };
     }
@@ -87,7 +86,7 @@ public static class FarmSimInventorySetup
     public static void ExecuteFromMenu()
     {
         Execute();
-        EditorUtility.DisplayDialog("Xong", "Da cap nhat Inventory Panel kieu 2 tren Main.", "OK");
+        EditorUtility.DisplayDialog("Xong", "Da cap nhat Inventory Panel dep tren Main.", "OK");
     }
 
     [MenuItem("FarmSim/Tao MainMenu", false, 25)]
@@ -100,7 +99,6 @@ public static class FarmSimInventorySetup
     {
         var scene = EditorSceneManager.OpenScene("Assets/Scenes/MainMenu.unity");
 
-        // Clear old generated UI roots
         foreach (var root in scene.GetRootGameObjects().ToArray())
         {
             if (root.name == "Main Camera" || root.name == "Global Light 2D") continue;
@@ -131,7 +129,7 @@ public static class FarmSimInventorySetup
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
         if (showDialog)
-            EditorUtility.DisplayDialog("Xong", "Da tao MainMenu (nen farm + panel go + 3 nut).", "OK");
+            EditorUtility.DisplayDialog("Xong", "Da tao MainMenu.", "OK");
     }
 
     public static void Execute()
@@ -142,85 +140,73 @@ public static class FarmSimInventorySetup
         var canvas = GameObject.Find("Canvas");
         if (canvas == null) throw new System.Exception("Khong tim thay Canvas trong Main.");
 
-        var invTextGo = GameObject.Find("InventoryText");
-        if (invTextGo != null)
-        {
-            var rt = invTextGo.GetComponent<RectTransform>();
-            if (rt != null)
-            {
-                rt.sizeDelta = new Vector2(280, 48);
-                rt.anchoredPosition = new Vector2(-40, -40);
-            }
-            var tmp = invTextGo.GetComponent<TMP_Text>();
-            if (tmp != null)
-            {
-                tmp.text = "Kho: 0 (I)";
-                tmp.fontSize = 28;
-                tmp.alignment = TextAlignmentOptions.TopRight;
-            }
-        }
-
         DestroyNamed(canvas.transform, "InventoryPanel");
-        DestroyNamed(canvas.transform, "InventoryButton");
         var oldRoot = GameObject.Find("InventoryUIRoot");
         if (oldRoot != null) Object.DestroyImmediate(oldRoot);
 
-        // Force rebuild slot prefab for style 2
+        // Force rebuild slot prefab
         if (AssetDatabase.LoadAssetAtPath<GameObject>(SlotPrefabPath) != null)
             AssetDatabase.DeleteAsset(SlotPrefabPath);
         var slotPrefab = EnsureSlotPrefab();
 
-        // Outer wood frame (bottom center)
+        // 1. Khung ngoai go am ap - Can giua man hinh (khong de len Toolbar phia duoi!)
         var panel = new GameObject("InventoryPanel", typeof(RectTransform), typeof(Image));
         panel.transform.SetParent(canvas.transform, false);
         panel.GetComponent<Image>().color = WoodOuter;
         var panelRt = panel.GetComponent<RectTransform>();
-        panelRt.anchorMin = new Vector2(0.5f, 0f);
-        panelRt.anchorMax = new Vector2(0.5f, 0f);
-        panelRt.pivot = new Vector2(0.5f, 0f);
-        panelRt.anchoredPosition = new Vector2(0, 24);
-        panelRt.sizeDelta = new Vector2(980, 320);
+        panelRt.anchorMin = new Vector2(0.5f, 0.5f);
+        panelRt.anchorMax = new Vector2(0.5f, 0.5f);
+        panelRt.pivot = new Vector2(0.5f, 0.5f);
+        panelRt.anchoredPosition = new Vector2(0f, 25f);
+        panelRt.sizeDelta = new Vector2(760f, 440f);
 
-        // Mid wood rim
+        // 2. Vien go sang
         var mid = new GameObject("WoodRim", typeof(RectTransform), typeof(Image));
         mid.transform.SetParent(panel.transform, false);
         mid.GetComponent<Image>().color = WoodInner;
         var midRt = mid.GetComponent<RectTransform>();
         midRt.anchorMin = Vector2.zero;
         midRt.anchorMax = Vector2.one;
-        midRt.offsetMin = new Vector2(8, 8);
-        midRt.offsetMax = new Vector2(-8, -8);
+        midRt.offsetMin = new Vector2(6, 6);
+        midRt.offsetMax = new Vector2(-6, -6);
 
-        // Cream body
+        // 3. Than giay/go kem am ap
         var body = new GameObject("Body", typeof(RectTransform), typeof(Image));
         body.transform.SetParent(mid.transform, false);
         body.GetComponent<Image>().color = Cream;
         var bodyRt = body.GetComponent<RectTransform>();
         bodyRt.anchorMin = Vector2.zero;
         bodyRt.anchorMax = Vector2.one;
-        bodyRt.offsetMin = new Vector2(6, 6);
-        bodyRt.offsetMax = new Vector2(-6, -6);
+        bodyRt.offsetMin = new Vector2(5, 5);
+        bodyRt.offsetMax = new Vector2(-5, -5);
 
-        var title = CreateTmp(body.transform, "Title", "Inventory",
-            new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -22), new Vector2(400, 40),
+        // 4. Tieu de tren dau
+        var title = CreateTmp(body.transform, "Title", "TÚI ĐỒ (INVENTORY)",
+            new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0, -22), new Vector2(400, 36),
             TextAlignmentOptions.Center);
-        title.fontSize = 36;
+        title.fontSize = 24;
         title.fontStyle = FontStyles.Bold;
-        title.color = Color.white;
-        title.outlineWidth = 0.2f;
-        title.outlineColor = new Color32(80, 40, 10, 255);
+        title.color = new Color(0.20f, 0.12f, 0.05f, 1f);
         title.raycastTarget = false;
 
+        // Nut dong [X] o goc tren phai
+        var closeBtn = CreateButton(body.transform, "CloseButton", "✕",
+            new Vector2(1f, 1f), new Vector2(1f, 1f), new Vector2(-18, -18), new Vector2(30, 30));
+        closeBtn.GetComponent<Image>().color = new Color(0.65f, 0.22f, 0.18f, 0.95f);
+        var closeTmp = closeBtn.GetComponentInChildren<TMP_Text>();
+        if (closeTmp != null) closeTmp.fontSize = 18;
+
+        // 5. Luoi o vat pham (8 cot x 3 dong = 24 o)
         var content = new GameObject("Content", typeof(RectTransform), typeof(GridLayoutGroup));
         content.transform.SetParent(body.transform, false);
         var contentRt = content.GetComponent<RectTransform>();
-        contentRt.anchorMin = new Vector2(0, 0);
-        contentRt.anchorMax = new Vector2(1, 1);
-        contentRt.offsetMin = new Vector2(20, 18);
-        contentRt.offsetMax = new Vector2(-20, -56);
+        contentRt.anchorMin = Vector2.zero;
+        contentRt.anchorMax = Vector2.one;
+        contentRt.offsetMin = new Vector2(20, 80);
+        contentRt.offsetMax = new Vector2(-20, -52);
         var grid = content.GetComponent<GridLayoutGroup>();
-        grid.cellSize = new Vector2(72, 72);
-        grid.spacing = new Vector2(8, 8);
+        grid.cellSize = new Vector2(80, 80);
+        grid.spacing = new Vector2(10, 10);
         grid.padding = new RectOffset(4, 4, 4, 4);
         grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
         grid.constraintCount = 8;
@@ -228,27 +214,78 @@ public static class FarmSimInventorySetup
         grid.startCorner = GridLayoutGroup.Corner.UpperLeft;
         grid.startAxis = GridLayoutGroup.Axis.Horizontal;
 
-        var empty = CreateTmp(body.transform, "EmptyLabel", "Kho trong",
-            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, -10), new Vector2(360, 40),
+        var empty = CreateTmp(body.transform, "EmptyLabel", "Túi đồ hiện đang trống",
+            new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(0, 10), new Vector2(360, 40),
             TextAlignmentOptions.Center);
-        empty.fontSize = 26;
-        empty.color = new Color(0.35f, 0.25f, 0.15f, 0.85f);
+        empty.fontSize = 22;
+        empty.color = new Color(0.40f, 0.30f, 0.20f, 0.85f);
         empty.raycastTarget = false;
         empty.gameObject.SetActive(false);
 
+        // 6. Thanh Footer thong tin vat pham & thao tac o duoi cung
+        var footer = new GameObject("InfoFooter", typeof(RectTransform), typeof(Image));
+        footer.transform.SetParent(body.transform, false);
+        var footRt = footer.GetComponent<RectTransform>();
+        footRt.anchorMin = new Vector2(0, 0);
+        footRt.anchorMax = new Vector2(1, 0);
+        footRt.pivot = new Vector2(0.5f, 0f);
+        footRt.anchoredPosition = new Vector2(0, 12);
+        footRt.sizeDelta = new Vector2(-40, 56);
+        footer.GetComponent<Image>().color = new Color(0.18f, 0.13f, 0.08f, 0.94f);
+
+        var infoText = CreateTmp(footer.transform, "InfoText",
+            "<color=#78350F><b>TÚI ĐỒ NÔNG TRẠI</b></color>  —  <color=#CBD5E1>Click chọn vật phẩm để xem hoặc gán phím 1 - 6</color>",
+            Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
+            TextAlignmentOptions.Left);
+        infoText.rectTransform.offsetMin = new Vector2(16, 4);
+        infoText.rectTransform.offsetMax = new Vector2(-190, -4);
+        infoText.fontSize = 15;
+        infoText.color = Color.white;
+        infoText.raycastTarget = false;
+
+        var sellOneBtn = CreateButton(footer.transform, "SellOneBtn", "Bán 1",
+            new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-96, 0), new Vector2(82, 34));
+        sellOneBtn.GetComponent<Image>().color = new Color(0.82f, 0.45f, 0.12f, 0.95f);
+        var sellOneTmp = sellOneBtn.GetComponentInChildren<TMP_Text>();
+        if (sellOneTmp != null) sellOneTmp.fontSize = 14;
+        sellOneBtn.SetActive(false);
+
+        var sellAllBtn = CreateButton(footer.transform, "SellAllBtn", "Bán hết",
+            new Vector2(1f, 0.5f), new Vector2(1f, 0.5f), new Vector2(-8, 0), new Vector2(82, 34));
+        sellAllBtn.GetComponent<Image>().color = new Color(0.18f, 0.55f, 0.28f, 0.95f);
+        var sellAllTmp = sellAllBtn.GetComponentInChildren<TMP_Text>();
+        if (sellAllTmp != null) sellAllTmp.fontSize = 14;
+        sellAllBtn.SetActive(false);
+
         panel.SetActive(false);
 
-        // Nut Kho dang icon — FarmSimHudCleanupSetup tao lai; tranh nut chu to
-        // (giu PanelToggle phim I qua cleanup / OrdersHotkey)
-
+        // 7. Khoi tao InventoryUIRoot va gan cac thanh phan vao InventoryUI
         var uiRoot = new GameObject("InventoryUIRoot");
         var invUi = uiRoot.AddComponent<InventoryUI>();
         var uiSo = new SerializedObject(invUi);
+        uiSo.FindProperty("panel").objectReferenceValue = panel;
         uiSo.FindProperty("content").objectReferenceValue = content.transform;
         uiSo.FindProperty("slotPrefab").objectReferenceValue = slotPrefab;
         uiSo.FindProperty("emptyLabel").objectReferenceValue = empty;
+        uiSo.FindProperty("infoText").objectReferenceValue = infoText;
+        uiSo.FindProperty("closeButton").objectReferenceValue = closeBtn.GetComponent<Button>();
+        uiSo.FindProperty("sellOneButton").objectReferenceValue = sellOneBtn.GetComponent<Button>();
+        uiSo.FindProperty("sellAllButton").objectReferenceValue = sellAllBtn.GetComponent<Button>();
         uiSo.FindProperty("slotCount").intValue = 24;
         uiSo.ApplyModifiedPropertiesWithoutUndo();
+
+        // Ket noi phim I va nut InventoryButton toi panel moi nay
+        var invBtn = canvas.transform.Find("InventoryButton");
+        if (invBtn != null)
+        {
+            var toggle = invBtn.GetComponent<PanelToggle>();
+            if (toggle != null)
+            {
+                var tSo = new SerializedObject(toggle);
+                tSo.FindProperty("panel").objectReferenceValue = panel;
+                tSo.ApplyModifiedPropertiesWithoutUndo();
+            }
+        }
 
         var orders = canvas.transform.Find("OrdersPanel");
         if (orders != null)
@@ -256,15 +293,11 @@ public static class FarmSimInventorySetup
         else
             panel.transform.SetAsLastSibling();
 
-        // Keep seed buttons / SellAll above inventory visually when both open:
-        // Inventory sits at bottom; seed row is also bottom — nudge inventory a bit if needed.
-        // SellButton stays outside panel (existing).
-
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene, MainScenePath);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        Debug.Log("[FarmSim] Inventory style-2 wired → " + MainScenePath);
+        Debug.Log("[FarmSim] Centered Inventory wired → " + MainScenePath);
     }
 
     static InventorySlot EnsureSlotPrefab()
@@ -274,64 +307,89 @@ public static class FarmSimInventorySetup
         var root = new GameObject("InventorySlot", typeof(RectTransform), typeof(Image), typeof(Button));
         var rootImg = root.GetComponent<Image>();
         rootImg.color = SlotEmpty;
+        var rt = root.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(80, 80);
 
-        // Soft border via outline image child behind? Use darker parent already; add inset
+        // Inset border
         var inset = new GameObject("Inset", typeof(RectTransform), typeof(Image));
         inset.transform.SetParent(root.transform, false);
         var insetRt = inset.GetComponent<RectTransform>();
         insetRt.anchorMin = Vector2.zero;
         insetRt.anchorMax = Vector2.one;
-        insetRt.offsetMin = new Vector2(3, 3);
-        insetRt.offsetMax = new Vector2(-3, -3);
+        insetRt.offsetMin = new Vector2(2, 2);
+        insetRt.offsetMax = new Vector2(-2, -2);
         var insetImg = inset.GetComponent<Image>();
         insetImg.color = SlotFilled;
         insetImg.raycastTarget = false;
 
+        // Icon (To, dep, o giua, khong chu che!)
         var iconGo = new GameObject("Icon", typeof(RectTransform), typeof(Image));
         iconGo.transform.SetParent(root.transform, false);
         var iconRt = iconGo.GetComponent<RectTransform>();
         iconRt.anchorMin = new Vector2(0.5f, 0.5f);
         iconRt.anchorMax = new Vector2(0.5f, 0.5f);
         iconRt.pivot = new Vector2(0.5f, 0.5f);
-        iconRt.anchoredPosition = new Vector2(0, 4);
-        iconRt.sizeDelta = new Vector2(48, 48);
+        iconRt.anchoredPosition = Vector2.zero;
+        iconRt.sizeDelta = new Vector2(50, 50);
         var icon = iconGo.GetComponent<Image>();
         icon.preserveAspect = true;
         icon.raycastTarget = false;
         icon.enabled = false;
 
-        var countTmp = CreateTmp(root.transform, "Count", "0",
-            new Vector2(1, 0), new Vector2(1, 0), new Vector2(-6, 6), new Vector2(40, 24),
-            TextAlignmentOptions.BottomRight);
-        countTmp.fontSize = 18;
+        // Count Badge (goc duoi phai kem nen toi x{count})
+        var countBg = new GameObject("CountBg", typeof(RectTransform), typeof(Image));
+        countBg.transform.SetParent(root.transform, false);
+        var countBgRt = countBg.GetComponent<RectTransform>();
+        countBgRt.anchorMin = new Vector2(1, 0);
+        countBgRt.anchorMax = new Vector2(1, 0);
+        countBgRt.pivot = new Vector2(1, 0);
+        countBgRt.anchoredPosition = new Vector2(-3, 3);
+        countBgRt.sizeDelta = new Vector2(36, 19);
+        var countBgImg = countBg.GetComponent<Image>();
+        countBgImg.color = new Color(0.10f, 0.10f, 0.14f, 0.88f);
+        countBgImg.raycastTarget = false;
+
+        var countTmp = CreateTmp(countBg.transform, "Count", "x0",
+            Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
+            TextAlignmentOptions.Center);
+        countTmp.fontSize = 12;
         countTmp.fontStyle = FontStyles.Bold;
         countTmp.color = Color.white;
-        countTmp.outlineWidth = 0.25f;
-        countTmp.outlineColor = new Color32(0, 0, 0, 255);
         countTmp.raycastTarget = false;
-        countTmp.gameObject.SetActive(false);
+        countBg.SetActive(false);
 
-        var sellBtn = CreateButton(root.transform, "SellOne", "$",
-            new Vector2(0, 1), new Vector2(0, 1),
-            new Vector2(14, -14), new Vector2(26, 26));
-        sellBtn.GetComponent<Image>().color = SellBtn;
-        var sellTmp = sellBtn.GetComponentInChildren<TMP_Text>();
-        if (sellTmp != null)
-        {
-            sellTmp.fontSize = 16;
-            sellTmp.fontStyle = FontStyles.Bold;
-        }
-        sellBtn.SetActive(false);
+        // Hotbar Badge (goc tren trai, nen xanh vien [1]..[6])
+        var badgeBg = new GameObject("HotbarBadge", typeof(RectTransform), typeof(Image));
+        badgeBg.transform.SetParent(root.transform, false);
+        var badgeRt = badgeBg.GetComponent<RectTransform>();
+        badgeRt.anchorMin = new Vector2(0, 1);
+        badgeRt.anchorMax = new Vector2(0, 1);
+        badgeRt.pivot = new Vector2(0, 1);
+        badgeRt.anchoredPosition = new Vector2(3, -3);
+        badgeRt.sizeDelta = new Vector2(19, 18);
+        var badgeImg = badgeBg.GetComponent<Image>();
+        badgeImg.color = new Color(0.15f, 0.42f, 0.90f, 0.95f);
+        badgeImg.raycastTarget = false;
+
+        var badgeTmp = CreateTmp(badgeBg.transform, "BadgeText", "1",
+            Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero,
+            TextAlignmentOptions.Center);
+        badgeTmp.fontSize = 11;
+        badgeTmp.fontStyle = FontStyles.Bold;
+        badgeTmp.color = Color.white;
+        badgeTmp.raycastTarget = false;
+        badgeBg.SetActive(false);
 
         var slotComp = root.AddComponent<InventorySlot>();
         var so = new SerializedObject(slotComp);
         so.FindProperty("background").objectReferenceValue = rootImg;
         so.FindProperty("icon").objectReferenceValue = icon;
         so.FindProperty("countText").objectReferenceValue = countTmp;
+        so.FindProperty("badgeText").objectReferenceValue = badgeTmp;
         so.FindProperty("selectButton").objectReferenceValue = root.GetComponent<Button>();
-        so.FindProperty("sellOneButton").objectReferenceValue = sellBtn.GetComponent<Button>();
         so.FindProperty("emptyColor").colorValue = SlotEmpty;
         so.FindProperty("filledColor").colorValue = SlotFilled;
+        so.FindProperty("selectedColor").colorValue = SlotSelected;
         so.ApplyModifiedPropertiesWithoutUndo();
 
         root.SetActive(false);
@@ -397,7 +455,7 @@ public static class FarmSimInventorySetup
             Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero, TextAlignmentOptions.Center);
         text.rectTransform.offsetMin = Vector2.zero;
         text.rectTransform.offsetMax = Vector2.zero;
-        text.fontSize = 30;
+        text.fontSize = 20;
         return go;
     }
 }

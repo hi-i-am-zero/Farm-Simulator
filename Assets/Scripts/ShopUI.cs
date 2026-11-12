@@ -242,6 +242,44 @@ public class ShopUI : MonoBehaviour
                 RebuildAnimalBuySlots(offer.animalShop);
             else if (offer.kind == ShopOfferKind.Seed && offer.seedCrop != null)
                 RebuildSeedBuySlot(offer.seedCrop);
+            else if (offer.kind == ShopOfferKind.Tool && offer.toolData != null)
+                RebuildToolBuySlot(offer.toolData);
+        }
+    }
+
+    void RebuildToolBuySlot(ToolData tool)
+    {
+        if (tool == null) return;
+        bool isOwned = GameManager.Instance != null && GameManager.Instance.OwnsTool(tool);
+        int playerMoney = CurrentMoney;
+        bool canAfford = playerMoney >= tool.price;
+
+        var row = CreateItemRow();
+
+        if (tool.icon != null)
+            CreateIcon(row.transform, tool.icon, new Vector2(38, 38));
+
+        string priceHex = (!isOwned && !canAfford) ? "#F87171" : "#FFD700";
+        string desc = $"<b>{tool.displayName}</b>  -  Giá: <color={priceHex}><b>{tool.price}$</b></color>\n<size=17><color=#CBD5E1>Công cụ làm nông (Chỉ mua 1 lần)</color></size>";
+        CreateText(row.transform, desc, 20, TextAlignmentOptions.Left, new Vector2(260, 48));
+
+        if (isOwned)
+        {
+            CreateText(row.transform, "<color=#64748B><b>ĐÃ SỞ HỮU</b></color>", 19, TextAlignmentOptions.Right, new Vector2(160, 40));
+        }
+        else
+        {
+            Color btnColor = canAfford ? ColorBtnGreen : ColorBtnWarn;
+            var buyBtn = CreateSimpleButton(row.transform, $"Mua ({tool.price}$)", btnColor, new Vector2(150, 42));
+            var capturedTool = tool;
+            buyBtn.onClick.AddListener(() =>
+            {
+                if (GameManager.Instance != null && GameManager.Instance.TryBuyTool(capturedTool))
+                {
+                    UpdateMoneyDisplay(CurrentMoney);
+                    RebuildContent(false);
+                }
+            });
         }
     }
 
@@ -303,8 +341,12 @@ public class ShopUI : MonoBehaviour
         int ownedSeeds = GameManager.Instance != null ? GameManager.Instance.SeedCount(crop) : 0;
         var row = CreateItemRow();
 
+        Sprite seedSprite = crop.seedIcon != null ? crop.seedIcon : crop.icon;
+        if (seedSprite != null)
+            CreateIcon(row.transform, seedSprite, new Vector2(38, 38));
+
         string desc = $"<b>Hạt {crop.cropName}</b>  -  Giá: <color=#FFD700><b>{crop.seedPrice}$</b></color>\n<size=17><color=#CBD5E1>Trong túi: <b>{ownedSeeds}</b> hạt</color></size>";
-        CreateText(row.transform, desc, 20, TextAlignmentOptions.Left, new Vector2(310, 48));
+        CreateText(row.transform, desc, 20, TextAlignmentOptions.Left, new Vector2(260, 48));
 
         var buyBtn = CreateSimpleButton(row.transform, "Mua 1 hạt", ColorBtnGreen, new Vector2(130, 42));
         var capturedCrop = crop;
@@ -344,8 +386,12 @@ public class ShopUI : MonoBehaviour
             selectedSellAmounts[crop] = chosenQty;
 
             var row = CreateItemRow();
+
+            if (crop.icon != null)
+                CreateIcon(row.transform, crop.icon, new Vector2(38, 38));
+
             string infoText = $"<b>{crop.cropName}</b>  -  Giá thu: <color=#FFD700><b>{unitPrice}$</b></color>\n<size=17><color=#CBD5E1>Đang có: <b>{owned}</b></color></size>";
-            CreateText(row.transform, infoText, 20, TextAlignmentOptions.Left, new Vector2(190, 48));
+            CreateText(row.transform, infoText, 20, TextAlignmentOptions.Left, new Vector2(160, 48));
 
             if (owned <= 0)
             {
@@ -416,6 +462,19 @@ public class ShopUI : MonoBehaviour
 
         spawnedItems.Add(row);
         return row;
+    }
+
+    Image CreateIcon(Transform parent, Sprite sprite, Vector2 size)
+    {
+        var go = new GameObject("Icon", typeof(RectTransform), typeof(Image), typeof(LayoutElement));
+        go.transform.SetParent(parent, false);
+        ApplyLayoutSize(go, size);
+
+        var img = go.GetComponent<Image>();
+        img.sprite = sprite;
+        img.preserveAspect = true;
+        img.raycastTarget = false;
+        return img;
     }
 
     TMP_Text CreateText(Transform parent, string text, float fontSize, TextAlignmentOptions align, Vector2 size)

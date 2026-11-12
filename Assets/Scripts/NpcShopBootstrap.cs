@@ -172,6 +172,15 @@ public class NpcShopBootstrap : MonoBehaviour
 
     static void SetupSeedNpc(CropDatabase cropDb)
     {
+        var buyOffers = new List<ShopOffer>();
+
+        // 1. Công cụ làm nông (Cuốc, Bình tưới) - Bán tại NPC hạt giống, chỉ mua 1 lần!
+        var hoe = FindTool(ToolType.Hoe);
+        var water = FindTool(ToolType.WateringCan);
+        if (hoe != null) buyOffers.Add(ToolOffer(hoe));
+        if (water != null) buyOffers.Add(ToolOffer(water));
+
+        // 2. Hạt giống các loại cây trồng
         CropData[] crops =
         {
             FindCrop(cropDb, "Lúa"),
@@ -180,7 +189,6 @@ public class NpcShopBootstrap : MonoBehaviour
             FindCrop(cropDb, "Cà chua")
         };
 
-        var buyOffers = new List<ShopOffer>();
         var sellCrops = new List<CropData>();
         foreach (var crop in crops)
         {
@@ -192,14 +200,48 @@ public class NpcShopBootstrap : MonoBehaviour
         CreateNpcShopObject(
             "NpcShop_Seed",
             new Vector3(-12.5f, -18.5f, 0f),
-            "Cửa Hàng Hạt Giống & Nông Sản",
-            "Hạt giống tươi tốt và thu mua nông sản giá cao nhất vùng!",
+            "Cửa Hàng Hạt Giống & Công Cụ",
+            "Hạt giống tươi tốt, công cụ làm nông và thu mua nông sản giá cao nhất vùng!",
             "[E] Cửa Hàng Nông Sản",
             buyOffers.ToArray(),
             sellCrops.ToArray(),
             null
         );
     }
+
+    static ToolData FindTool(ToolType type)
+    {
+        if (GameManager.Instance != null)
+        {
+            var t = GameManager.Instance.GetToolByType(type);
+            if (t != null) return t;
+        }
+
+        var tb = FindAnyObjectByType<ToolsToolbar>(FindObjectsInactive.Include);
+        if (tb != null && tb.Tools != null)
+        {
+            foreach (var t in tb.Tools)
+            {
+                if (t != null && t.type == type) return t;
+            }
+        }
+
+#if UNITY_EDITOR
+        string fileName = type == ToolType.Hoe ? "Hoe" : type == ToolType.WateringCan ? "WateringCan" : "";
+        if (!string.IsNullOrEmpty(fileName))
+        {
+            return UnityEditor.AssetDatabase.LoadAssetAtPath<ToolData>($"Assets/Data/Tools/{fileName}.asset");
+        }
+#endif
+        return null;
+    }
+
+    static ShopOffer ToolOffer(ToolData tool) => new()
+    {
+        kind = ShopOfferKind.Tool,
+        toolData = tool,
+        label = tool != null ? tool.displayName : "Công cụ"
+    };
 
     static GameObject[] EnsureAnimalsInPen(AnimalPenSpec pen, GameObject prefab, int count, CropData productItem)
     {

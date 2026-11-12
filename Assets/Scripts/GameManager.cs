@@ -16,12 +16,17 @@ public class GameManager : MonoBehaviour
     public readonly Dictionary<CropData, int> Seeds = new();
     readonly HashSet<string> ownedTools = new();
 
+    public const int HotbarSlotCount = 6;
+    public readonly InventoryItem[] Hotbar = new InventoryItem[HotbarSlotCount];
+    public int ActiveHotbarIndex { get; private set; } = 0;
+
     public event Action<int> OnMoneyChanged;
     public event Action<CropData> OnCropSelected;
     public event Action<ToolData> OnToolSelected;
     public event Action OnInventoryChanged;
     public event Action OnToolsOwnedChanged;
     public event Action OnSeedsChanged;
+    public event Action OnHotbarChanged;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void ResetStatics() => Instance = null;
@@ -41,6 +46,8 @@ public class GameManager : MonoBehaviour
         // Đảm bảo có NpcShopBootstrap (tạo và định vị 4 NPC Shop + 3 Chuồng động vật luôn đầy đủ)
         if (GetComponent<NpcShopBootstrap>() == null)
             gameObject.AddComponent<NpcShopBootstrap>();
+
+        InitializeDefaultHotbarAndTools();
     }
 
     void Start()
@@ -62,14 +69,184 @@ public class GameManager : MonoBehaviour
         return n;
     }
 
+    public InventoryItem GetActiveHotbarItem()
+    {
+        if (ActiveHotbarIndex >= 0 && ActiveHotbarIndex < HotbarSlotCount)
+            return Hotbar[ActiveHotbarIndex];
+        return null;
+    }
+
+    public void SelectHotbarSlot(int index)
+    {
+        if (index < 0 || index >= HotbarSlotCount) return;
+        ActiveHotbarIndex = index;
+        SyncActiveSelection();
+        OnHotbarChanged?.Invoke();
+    }
+
+    public void AssignItemToHotbar(int hotbarIndex, InventoryItem newItem)
+    {
+        if (hotbarIndex < 0 || hotbarIndex >= HotbarSlotCount) return;
+
+        // Nếu món này đã có ở 1 ô Hotbar khác, ta xóa ô cũ đó để tránh trùng lặp
+        for (int i = 0; i < HotbarSlotCount; i++)
+        {
+            if (i != hotbarIndex && IsSameItem(Hotbar[i], newItem))
+            {
+                Hotbar[i] = new InventoryItem();
+            }
+        }
+
+        Hotbar[hotbarIndex] = newItem != null ? newItem.Clone() : new InventoryItem();
+        SyncActiveSelection();
+        OnHotbarChanged?.Invoke();
+        OnInventoryChanged?.Invoke();
+    }
+
+    public void ClearHotbarSlot(int hotbarIndex)
+    {
+        if (hotbarIndex < 0 || hotbarIndex >= HotbarSlotCount) return;
+        Hotbar[hotbarIndex] = new InventoryItem();
+        SyncActiveSelection();
+        OnHotbarChanged?.Invoke();
+        OnInventoryChanged?.Invoke();
+    }
+
+    public bool IsSameItem(InventoryItem a, InventoryItem b)
+    {
+        if (a == null || b == null || a.IsEmpty || b.IsEmpty) return false;
+        if (a.kind != b.kind) return false;
+        if (a.kind == ItemKind.Tool) return a.tool == b.tool;
+        return a.crop == b.crop;
+    }
+
+    public int GetHotbarSlotOf(InventoryItem item)
+    {
+        if (item == null || item.IsEmpty) return -1;
+        for (int i = 0; i < HotbarSlotCount; i++)
+        {
+            if (IsSameItem(Hotbar[i], item)) return i;
+        }
+        return -1;
+    }
+
+    public ToolData GetToolByType(ToolType type)
+    {
+        var tb = ToolsToolbar.Instance ?? FindAnyObjectByType<ToolsToolbar>(FindObjectsInactive.Include);
+        if (tb != null && tb.Tools != null)
+        {
+            foreach (var t in tb.Tools)
+                if (t != null && t.type == type) return t;
+        }
+        return null;
+    }
+
+    public void InitializeDefaultHotbarAndTools()
+    {
+        ownedTools.Add("Hand");
+
+        for (int i = 0; i < HotbarSlotCount; i++)
+        {
+            if (Hotbar[i] == null)
+                Hotbar[i] = new InventoryItem();
+        }
+
+        // Nếu đã sở hữu Cuốc (từ save), gán vào ô 0
+        var hoe = GetToolByType(ToolType.Hoe);
+        if (hoe != null && OwnsTool(hoe) && Hotbar[0].IsEmpty)
+        {
+            Hotbar[0] = InventoryItem.FromTool(hoe);
+        }
+
+        // Nếu đã sở hữu Bình tưới (từ save), gán vào ô 1
+        var water = GetToolByType(ToolType.WateringCan);
+        if (water != null && OwnsTool(water) && Hotbar[1].IsEmpty)
+        {
+            Hotbar[1] = InventoryItem.FromTool(water);
+        }
+
+        // Hạt giống ban đầu (nếu có defaultCrop và chưa có hạt)
+        if (defaultCrop != null && SeedCount(defaultCrop) == 0)
+        {
+            Seeds[defaultCrop] = 5;
+            for (int i = 0; i < HotbarSlotCount; i++)
+            {
+                if (Hotbar[i].IsEmpty)
+                {
+                    Hotbar[i] = InventoryItem.FromSeed(defaultCrop, Seeds[defaultCrop]);
+                    break;
+                }
+            }
+        }
+
+        SelectHotbarSlot(0);
+        OnHotbarChanged?.Invoke();
+    }
+
+    public void SyncActiveSelection()
+    {
+        var item = GetActiveHotbarItem();
+        if (item == null || item.IsEmpty)
+        {
+            SelectedTool = null;
+            SelectedCrop = null;
+        }
+        else if (item.kind == ItemKind.Tool)
+        {
+            SelectedTool = item.tool;
+            SelectedCrop = null;
+        }
+        else if (item.kind == ItemKind.Seed)
+        {
+            SelectedCrop = item.crop;
+            SelectedTool = GetToolByType(ToolType.Seed);
+        }
+        else
+        {
+            SelectedTool = null;
+            SelectedCrop = item.crop;
+        }
+
+        OnToolSelected?.Invoke(SelectedTool);
+        OnCropSelected?.Invoke(SelectedCrop);
+    }
+
     public bool TryBuySeed(CropData crop)
     {
         if (crop == null) return false;
         if (!TrySpend(crop.seedPrice)) return false;
         Seeds.TryGetValue(crop, out int n);
         Seeds[crop] = n + 1;
-        SelectCrop(crop);
+
+        // Cập nhật số lượng trên các ô Hotbar
+        bool onHotbar = false;
+        for (int i = 0; i < HotbarSlotCount; i++)
+        {
+            if (Hotbar[i] != null && Hotbar[i].kind == ItemKind.Seed && Hotbar[i].crop == crop)
+            {
+                Hotbar[i].count = Seeds[crop];
+                onHotbar = true;
+                break;
+            }
+        }
+
+        // Nếu chưa có trên Hotbar, tự động đặt vào ô trống đầu tiên
+        if (!onHotbar)
+        {
+            for (int i = 0; i < HotbarSlotCount; i++)
+            {
+                if (Hotbar[i] == null || Hotbar[i].IsEmpty)
+                {
+                    Hotbar[i] = InventoryItem.FromSeed(crop, Seeds[crop]);
+                    break;
+                }
+            }
+        }
+
+        SyncActiveSelection();
         OnSeedsChanged?.Invoke();
+        OnHotbarChanged?.Invoke();
+        OnInventoryChanged?.Invoke();
         Toast.Show($"Đã mua hạt {crop.cropName} (túi: {Seeds[crop]})");
         AudioManager.Instance?.Play("sell");
         return true;
@@ -86,7 +263,21 @@ public class GameManager : MonoBehaviour
         int left = Seeds[crop] - 1;
         if (left > 0) Seeds[crop] = left;
         else Seeds.Remove(crop);
+
+        for (int i = 0; i < HotbarSlotCount; i++)
+        {
+            if (Hotbar[i] != null && Hotbar[i].kind == ItemKind.Seed && Hotbar[i].crop == crop)
+            {
+                Hotbar[i].count = left;
+                if (left <= 0)
+                    Hotbar[i] = new InventoryItem();
+            }
+        }
+
+        SyncActiveSelection();
         OnSeedsChanged?.Invoke();
+        OnHotbarChanged?.Invoke();
+        OnInventoryChanged?.Invoke();
         return true;
     }
 
@@ -131,6 +322,39 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Chuyển đổi xoay vòng qua các loại hạt giống đang có trong túi đồ
+    /// </summary>
+    public void CycleNextSeed()
+    {
+        var available = new List<CropData>();
+        foreach (var kv in Seeds)
+        {
+            if (kv.Key != null && kv.Value > 0)
+                available.Add(kv.Key);
+        }
+
+        if (available.Count == 0)
+        {
+            Toast.Show("Túi đã hết hạt giống! Hãy mua ở NPC trồng cây");
+            return;
+        }
+
+        if (available.Count == 1)
+        {
+            SelectCrop(available[0]);
+            Toast.Show($"Hạt {available[0].cropName} (Túi: {SeedCount(available[0])} hạt)");
+            return;
+        }
+
+        int currIndex = available.IndexOf(SelectedCrop);
+        int nextIndex = (currIndex + 1) % available.Count;
+        var nextCrop = available[nextIndex];
+        SelectCrop(nextCrop);
+        Toast.Show($"Đã chọn: Hạt {nextCrop.cropName} (Túi: {SeedCount(nextCrop)} hạt)");
+        AudioManager.Instance?.Play("click");
+    }
+
     public void SelectCrop(CropData crop)
     {
         SelectedCrop = crop;
@@ -139,7 +363,16 @@ public class GameManager : MonoBehaviour
 
     public bool OwnsTool(ToolData tool)
     {
-        return tool != null && ownedTools.Contains(tool.name);
+        if (tool == null) return false;
+        if (tool.type == ToolType.Hand) return true;
+        return ownedTools.Contains(tool.name);
+    }
+
+    public bool OwnsTool(string toolName)
+    {
+        if (string.IsNullOrEmpty(toolName)) return true;
+        if (toolName.Equals("Hand", StringComparison.OrdinalIgnoreCase)) return true;
+        return ownedTools.Contains(toolName);
     }
 
     public void SelectTool(ToolData tool)
@@ -159,16 +392,34 @@ public class GameManager : MonoBehaviour
         if (tool == null) return false;
         if (OwnsTool(tool))
         {
-            SelectTool(tool);
-            return true;
+            Toast.Show($"Bạn đã sở hữu {tool.displayName} rồi!");
+            return false;
         }
 
-        if (tool.price > 0 && !TrySpend(tool.price)) return false;
+        if (!TrySpend(tool.price))
+        {
+            Toast.Show("Không đủ tiền mua công cụ!");
+            return false;
+        }
 
         ownedTools.Add(tool.name);
+
+        // Tự động gán vào ô trống đầu tiên trên thanh công cụ Hotbar
+        for (int i = 0; i < HotbarSlotCount; i++)
+        {
+            if (Hotbar[i] == null || Hotbar[i].IsEmpty)
+            {
+                Hotbar[i] = InventoryItem.FromTool(tool);
+                SelectHotbarSlot(i);
+                break;
+            }
+        }
+
+        SyncActiveSelection();
         OnToolsOwnedChanged?.Invoke();
-        SelectTool(tool);
-        Toast.Show(tool.price > 0 ? $"Đã mua {tool.displayName}" : $"Đã nhận {tool.displayName}");
+        OnHotbarChanged?.Invoke();
+        OnInventoryChanged?.Invoke();
+        Toast.Show($"Đã mua {tool.displayName}! Đã gán vào thanh công cụ.");
         AudioManager.Instance?.Play("sell");
         return true;
     }

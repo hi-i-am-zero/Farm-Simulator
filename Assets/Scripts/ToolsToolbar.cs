@@ -3,98 +3,117 @@ using UnityEngine;
 
 public class ToolsToolbar : MonoBehaviour
 {
+    public static ToolsToolbar Instance { get; private set; }
+
     [SerializeField] Transform content;
     [SerializeField] ToolSlot slotPrefab;
     [SerializeField] ToolData[] tools;
 
+    public ToolData[] Tools => tools;
     readonly List<ToolSlot> slots = new();
+
+    void Awake()
+    {
+        Instance = this;
+
+        // Tự động mở rộng thanh Toolbar để đủ chỗ cho 6 ô (phím 1-6)
+        var rt = GetComponent<RectTransform>();
+        if (rt != null && rt.sizeDelta.x < 500f)
+            rt.sizeDelta = new Vector2(510f, 96f);
+    }
 
     void Start()
     {
-        BuildSlots();
-
         var gm = GameManager.Instance;
-        if (gm == null) return;
+        if (gm != null)
+        {
+            gm.InitializeDefaultHotbarAndTools();
+            gm.OnHotbarChanged += RefreshSlots;
+        }
 
-        gm.OnToolSelected += OnToolSelected;
-        gm.OnCropSelected += OnCropSelected;
-        gm.OnToolsOwnedChanged += OnToolsOwnedChanged;
-
-        // Tool gia 0 (Tay) tu dong so huu
-        gm.GrantFreeTools(tools);
         BuildSlots();
-        RefreshSelection(gm.SelectedTool);
+        RefreshSlots();
     }
 
     void OnDestroy()
     {
-        if (GameManager.Instance == null) return;
-        GameManager.Instance.OnToolSelected -= OnToolSelected;
-        GameManager.Instance.OnCropSelected -= OnCropSelected;
-        GameManager.Instance.OnToolsOwnedChanged -= OnToolsOwnedChanged;
+        if (Instance == this) Instance = null;
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.OnHotbarChanged -= RefreshSlots;
+        }
     }
 
     void Update()
     {
-        if (Time.timeScale == 0f || tools == null) return;
+        if (Time.timeScale == 0f) return;
 
         var gm = GameManager.Instance;
         if (gm == null) return;
 
-        for (int i = 0; i < tools.Length && i < 9; i++)
+        // Phím 1 đến 6 để chọn nhanh ô tương ứng trên thanh công cụ
+        for (int i = 0; i < GameManager.HotbarSlotCount; i++)
         {
-            if (!Input.GetKeyDown(KeyCode.Alpha1 + i) && !Input.GetKeyDown(KeyCode.Keypad1 + i))
-                continue;
+            if (Input.GetKeyDown(KeyCode.Alpha1 + i) || Input.GetKeyDown(KeyCode.Keypad1 + i))
+            {
+                gm.SelectHotbarSlot(i);
+            }
+        }
 
-            var tool = tools[i];
-            if (tool == null) continue;
-
-            // Phím tắt chỉ chọn tool đã mua (tránh mua nhầm → soft-lock)
-            if (gm.OwnsTool(tool))
-                gm.SelectTool(tool);
+        // Cuộn chuột giữa để đổi nhanh qua lại giữa các ô
+        float scroll = Input.GetAxisRaw("Mouse ScrollWheel");
+        if (scroll > 0.05f)
+        {
+            int prev = (gm.ActiveHotbarIndex - 1 + GameManager.HotbarSlotCount) % GameManager.HotbarSlotCount;
+            gm.SelectHotbarSlot(prev);
+        }
+        else if (scroll < -0.05f)
+        {
+            int next = (gm.ActiveHotbarIndex + 1) % GameManager.HotbarSlotCount;
+            gm.SelectHotbarSlot(next);
         }
     }
 
     void BuildSlots()
     {
-        if (content == null || slotPrefab == null || tools == null) return;
+        if (content == null) return;
+
+        if (slotPrefab == null)
+            slotPrefab = Resources.Load<ToolSlot>("ToolSlot");
 
         foreach (var s in slots)
             if (s != null) Destroy(s.gameObject);
         slots.Clear();
 
         var gm = GameManager.Instance;
-        var selected = gm != null ? gm.SelectedTool : null;
+        int activeIdx = gm != null ? gm.ActiveHotbarIndex : 0;
 
-        for (int i = 0; i < tools.Length; i++)
+        for (int i = 0; i < GameManager.HotbarSlotCount; i++)
         {
             var slot = Instantiate(slotPrefab, content);
             slot.gameObject.SetActive(true);
-            bool owned = gm != null && gm.OwnsTool(tools[i]);
-            slot.Bind(tools[i], i + 1, selected == tools[i] && owned, owned);
+            var item = gm != null ? gm.Hotbar[i] : null;
+            slot.Bind(item, i + 1, activeIdx == i);
             slots.Add(slot);
         }
     }
 
-    void OnToolSelected(ToolData tool) => RefreshSelection(tool);
-
-    void OnCropSelected(CropData _)
-    {
-        foreach (var slot in slots)
-            if (slot != null) slot.RefreshIcon();
-    }
-
-    void OnToolsOwnedChanged() => BuildSlots();
-
-    void RefreshSelection(ToolData selected)
+    public void RefreshSlots()
     {
         var gm = GameManager.Instance;
-        for (int i = 0; i < slots.Count; i++)
+        if (gm == null) return;
+
+        // Đảm bảo số lượng slot luôn đủ
+        if (slots.Count != GameManager.HotbarSlotCount)
+        {
+            BuildSlots();
+            return;
+        }
+
+        for (int i = 0; i < slots.Count && i < GameManager.HotbarSlotCount; i++)
         {
             if (slots[i] == null) continue;
-            bool owned = gm != null && i < tools.Length && gm.OwnsTool(tools[i]);
-            bool isSelected = owned && i < tools.Length && tools[i] == selected;
-            slots[i].Bind(tools[i], i + 1, isSelected, owned);
+            slots[i].Bind(gm.Hotbar[i], i + 1, gm.ActiveHotbarIndex == i);
         }
     }
 }

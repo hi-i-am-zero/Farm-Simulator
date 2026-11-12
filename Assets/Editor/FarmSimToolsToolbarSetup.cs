@@ -75,10 +75,10 @@ public static class FarmSimToolsToolbarSetup
         EnsureFolders();
         WirePlotPrefab();
 
-        var hoe = EnsureTool("Hoe", "Cuốc", ToolType.Hoe, "tile_0088", 15);
-        var water = EnsureTool("WateringCan", "Bình tưới", ToolType.WateringCan, "tile_0084", 20);
-        var seed = EnsureTool("Seed", "Hạt giống", ToolType.Seed, "tile_0089", 10);
-        var hand = EnsureTool("Hand", "Tay", ToolType.Hand, null, 10);
+        var hoe = EnsureTool("Hoe", "Cuốc", ToolType.Hoe, "tile_0088", 0);
+        var water = EnsureTool("WateringCan", "Bình tưới", ToolType.WateringCan, "tile_0084", 0);
+        var seed = EnsureTool("Seed", "Hạt giống", ToolType.Seed, "tile_0089", 0);
+        var hand = EnsureTool("Hand", "Tay", ToolType.Hand, null, 0);
         var tools = new[] { hoe, water, seed, hand };
 
         var slotPrefab = EnsureSlotPrefab();
@@ -142,9 +142,9 @@ public static class FarmSimToolsToolbarSetup
             toolsProp.GetArrayElementAtIndex(i).objectReferenceValue = tools[i];
         tbSo.ApplyModifiedPropertiesWithoutUndo();
 
-        // Inventory panel sits above hotbar
+        // Inventory panel sits above hotbar (neu neo o duoi)
         var invPanel = canvas.transform.Find("InventoryPanel") as RectTransform;
-        if (invPanel != null)
+        if (invPanel != null && Mathf.Approximately(invPanel.anchorMin.y, 0f))
             invPanel.anchoredPosition = new Vector2(0, 120);
 
         // Seed buttons above hotbar so they are not covered

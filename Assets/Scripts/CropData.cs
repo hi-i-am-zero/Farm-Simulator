@@ -8,6 +8,7 @@ public class CropData : ScriptableObject
     public int sellPrice = 25;
     public float growTime = 10f; // giây
     public Sprite icon;
+    public Sprite seedIcon;
     public Sprite[] growthSprites; // từ mầm -> chín
 
     [Header("Mùa vụ")]

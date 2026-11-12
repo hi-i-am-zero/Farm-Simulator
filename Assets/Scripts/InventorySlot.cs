@@ -7,14 +7,14 @@ public class InventorySlot : MonoBehaviour
     [SerializeField] Image background;
     [SerializeField] Image icon;
     [SerializeField] TMP_Text countText;
+    [SerializeField] TMP_Text badgeText;
     [SerializeField] Button selectButton;
     [SerializeField] Button sellOneButton;
-    [SerializeField] TMP_Text nameText;
-    [SerializeField] Color emptyColor = new(0.86f, 0.78f, 0.62f, 1f);
-    [SerializeField] Color filledColor = new(0.93f, 0.86f, 0.70f, 1f);
-    [SerializeField] Color selectedColor = new(1f, 0.95f, 0.55f, 1f);
+    [SerializeField] Color emptyColor = new(0.84f, 0.79f, 0.70f, 0.45f);
+    [SerializeField] Color filledColor = new(0.96f, 0.92f, 0.84f, 1f);
+    [SerializeField] Color selectedColor = new(1.0f, 0.88f, 0.35f, 1f);
 
-    CropData crop;
+    InventoryItem currentItem;
 
     void Awake()
     {
@@ -23,95 +23,86 @@ public class InventorySlot : MonoBehaviour
         if (selectButton != null)
             selectButton.onClick.AddListener(OnSelect);
         if (sellOneButton != null)
-            sellOneButton.onClick.AddListener(OnSellOne);
-        if (countText != null)
-            countText.textWrappingMode = TextWrappingModes.NoWrap;
+            sellOneButton.gameObject.SetActive(false);
     }
 
-    TMP_Text EnsureNameText()
+    public void Bind(InventoryItem item, bool isSelected = false)
     {
-        if (nameText != null) return nameText;
+        currentItem = item;
+        bool hasItem = item != null && !item.IsEmpty;
 
-        var existing = transform.Find("ItemName");
-        if (existing != null)
-        {
-            nameText = existing.GetComponent<TMP_Text>();
-            if (nameText != null) return nameText;
-        }
-
-        var go = new GameObject("ItemName", typeof(RectTransform));
-        go.transform.SetParent(transform, false);
-        go.transform.SetSiblingIndex(Mathf.Min(2, Mathf.Max(0, transform.childCount - 1)));
-
-        var rt = go.GetComponent<RectTransform>();
-        rt.anchorMin = Vector2.zero;
-        rt.anchorMax = Vector2.one;
-        rt.offsetMin = new Vector2(4f, 18f);
-        rt.offsetMax = new Vector2(-4f, -20f);
-
-        var tmp = go.AddComponent<TextMeshProUGUI>();
-        if (countText != null && countText.font != null)
-            tmp.font = countText.font;
-        tmp.enableAutoSizing = true;
-        tmp.fontSizeMin = 10f;
-        tmp.fontSizeMax = 15f;
-        tmp.fontStyle = FontStyles.Bold;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.textWrappingMode = TextWrappingModes.Normal;
-        tmp.color = new Color(0.10f, 0.13f, 0.17f, 1f);
-        tmp.raycastTarget = false;
-
-        nameText = tmp;
-        return nameText;
-    }
-
-    public void Bind(CropData cropData, int count, bool selected = false)
-    {
-        crop = cropData;
-        bool hasItem = crop != null && count > 0;
-
+        // 1. Icon vật phẩm ở chính giữa ô (hoàn toàn không có chữ đè lên!)
         if (icon != null)
         {
-            icon.enabled = false;
-            icon.sprite = null;
+            Sprite sprite = hasItem ? item.Icon : null;
+            icon.enabled = sprite != null;
+            icon.sprite = sprite;
+            icon.preserveAspect = true;
+            icon.color = Color.white;
         }
 
-        var label = EnsureNameText();
-        if (label != null)
-        {
-            label.gameObject.SetActive(hasItem);
-            label.text = hasItem ? crop.cropName : "";
-        }
-
+        // 2. Số lượng ở góc dưới phải (x{count})
         if (countText != null)
         {
-            countText.gameObject.SetActive(hasItem);
-            countText.text = hasItem ? $"x{count}" : "";
+            bool showCount = hasItem && (item.count > 1 || item.kind == ItemKind.Seed);
+            var parentGo = countText.transform.parent != null && countText.transform.parent != transform
+                ? countText.transform.parent.gameObject
+                : countText.gameObject;
+
+            parentGo.SetActive(showCount);
+            if (showCount)
+            {
+                countText.text = $"x{item.count}";
+            }
         }
 
-        if (sellOneButton != null)
-            sellOneButton.gameObject.SetActive(hasItem);
+        // 3. Huy hiệu Hotbar ở góc trên trái ([1], [2]...)
+        if (badgeText != null)
+        {
+            int slotIdx = hasItem && GameManager.Instance != null ? GameManager.Instance.GetHotbarSlotOf(item) : -1;
+            var parentGo = badgeText.transform.parent != null && badgeText.transform.parent != transform
+                ? badgeText.transform.parent.gameObject
+                : badgeText.gameObject;
 
+            parentGo.SetActive(slotIdx >= 0);
+            if (slotIdx >= 0)
+            {
+                badgeText.text = $"{slotIdx + 1}";
+            }
+        }
+
+        // 4. Ẩn nút bán cũ trên slot nếu còn sót lại
+        if (sellOneButton != null)
+            sellOneButton.gameObject.SetActive(false);
+
+        // Ẩn nhãn tên cũ nếu có sinh ra trước đây
+        var oldName = transform.Find("ItemName");
+        if (oldName != null) oldName.gameObject.SetActive(false);
+
+        // 5. Màu sắc viền / nền
         if (background != null)
         {
-            if (selected && hasItem) background.color = selectedColor;
-            else background.color = hasItem ? filledColor : emptyColor;
+            if (isSelected && hasItem)
+                background.color = selectedColor;
+            else if (hasItem)
+                background.color = filledColor;
+            else
+                background.color = emptyColor;
         }
 
         if (selectButton != null)
             selectButton.interactable = hasItem;
     }
 
-    void OnSelect()
+    public void Bind(CropData cropData, int count, bool selected = false)
     {
-        if (crop == null || GameManager.Instance == null) return;
-        GameManager.Instance.SelectCrop(crop);
-        AudioManager.Instance?.Play("click");
+        Bind(InventoryItem.FromHarvested(cropData, count), selected);
     }
 
-    void OnSellOne()
+    void OnSelect()
     {
-        if (crop == null || GameManager.Instance == null) return;
-        GameManager.Instance.SellOne(crop);
+        if (currentItem == null || currentItem.IsEmpty || InventoryUI.Instance == null) return;
+        InventoryUI.Instance.SelectItem(currentItem);
+        AudioManager.Instance?.Play("click");
     }
 }
