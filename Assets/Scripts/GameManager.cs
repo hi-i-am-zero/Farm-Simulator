@@ -151,18 +151,23 @@ public class GameManager : MonoBehaviour
                 Hotbar[i] = new InventoryItem();
         }
 
-        // Nếu đã sở hữu Cuốc (từ save), gán vào ô 0
-        var hoe = GetToolByType(ToolType.Hoe);
-        if (hoe != null && OwnsTool(hoe) && Hotbar[0].IsEmpty)
+        // Gán các công cụ đã sở hữu (từ save) vào các ô trống trên Hotbar
+        ToolType[] equippableTools = { ToolType.Hoe, ToolType.WateringCan, ToolType.Bucket, ToolType.Sickle };
+        foreach (var type in equippableTools)
         {
-            Hotbar[0] = InventoryItem.FromTool(hoe);
-        }
+            var tool = GetToolByType(type);
+            if (tool == null || !OwnsTool(tool)) continue;
+            var item = InventoryItem.FromTool(tool);
+            if (GetHotbarSlotOf(item) >= 0) continue;
 
-        // Nếu đã sở hữu Bình tưới (từ save), gán vào ô 1
-        var water = GetToolByType(ToolType.WateringCan);
-        if (water != null && OwnsTool(water) && Hotbar[1].IsEmpty)
-        {
-            Hotbar[1] = InventoryItem.FromTool(water);
+            for (int i = 0; i < HotbarSlotCount; i++)
+            {
+                if (Hotbar[i].IsEmpty)
+                {
+                    Hotbar[i] = item;
+                    break;
+                }
+            }
         }
 
         // Hạt giống ban đầu (nếu có defaultCrop và chưa có hạt)
@@ -404,13 +409,15 @@ public class GameManager : MonoBehaviour
 
         ownedTools.Add(tool.name);
 
-        // Tự động gán vào ô trống đầu tiên trên thanh công cụ Hotbar
+        // Tự động gán vào ô trống đầu tiên trên thanh công cụ Hotbar (nếu còn chỗ)
+        bool placedOnHotbar = false;
         for (int i = 0; i < HotbarSlotCount; i++)
         {
             if (Hotbar[i] == null || Hotbar[i].IsEmpty)
             {
                 Hotbar[i] = InventoryItem.FromTool(tool);
                 SelectHotbarSlot(i);
+                placedOnHotbar = true;
                 break;
             }
         }
@@ -419,7 +426,9 @@ public class GameManager : MonoBehaviour
         OnToolsOwnedChanged?.Invoke();
         OnHotbarChanged?.Invoke();
         OnInventoryChanged?.Invoke();
-        Toast.Show($"Đã mua {tool.displayName}! Đã gán vào thanh công cụ.");
+        Toast.Show(placedOnHotbar
+            ? $"Đã mua {tool.displayName}! Đã vào túi đồ & thanh công cụ."
+            : $"Đã mua {tool.displayName}! Mở túi đồ (I) để trang bị.");
         AudioManager.Instance?.Play("sell");
         return true;
     }
